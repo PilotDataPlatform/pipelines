@@ -97,10 +97,15 @@ def send_message(dataset_id, status, bids_output) -> None:
 def get_files(dataset_code) -> list:
     all_files = []
 
-    query = {'archived': False, 'zone': 1, 'container': dataset_code, 'container_type': 'dataset'}
+    query = {
+        'archived': False,
+        'zone': 1,
+        'container': dataset_code,
+        'container_type': 'dataset',
+        'recursive': True}
 
     try:
-        resp = requests.get(ConfigClass.METADATA_SERVICE_V1 + 'item/', params=query)
+        resp = requests.get(ConfigClass.METADATA_SERVICE_V1 + 'items/search/', params=query)
         for node in resp.json()['result']:
             if node['type'] == 'file':
                 all_files.append(node['storage']['location_uri'])
