@@ -37,7 +37,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build("$imagename_dcmedit_dev:v0.1",  "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./dcmedit")
                 customImage.push()
             }
@@ -67,7 +67,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build("$imagename_filecopy_dev:v0.1", "--no-cache ./filecopy")
                 customImage.push()
             }
@@ -98,7 +98,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]){
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build("$imagename_bids_validator_dev:v0.1", "./bids-validator")
                 customImage.push()
             }
@@ -140,7 +140,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build("$imagename_dcmedit_staging:v0.1", "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./dcmedit")
                 customImage.push()
             }
@@ -171,7 +171,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build("$imagename_filecopy_staging:v0.1", "--build-arg REGISTRY_USERNAME=${PIP_USERNAME} --build-arg REGISTRY_PASSWORD=${PIP_PASSWORD} ./filecopy")
                 customImage.push()
             }
@@ -201,7 +201,7 @@ pipeline {
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry("$registryURL", registryCredential) {
+            docker.withRegistry("$registryURLBase", registryCredential) {
                 customImage = docker.build(" $imagename_bids_validator_staging:v0.1", "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./bids-validator")
                 customImage.push()
             }
