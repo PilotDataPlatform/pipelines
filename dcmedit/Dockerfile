@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
-FROM ubuntu:18.04
+FROM python:3.9-buster
 LABEL maintainer="Shuai Liang <sliang@indocresearch.org>"
 
 RUN sed 's/main$/main universe/' -i /etc/apt/sources.list
