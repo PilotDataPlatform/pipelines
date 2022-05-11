@@ -20,3 +20,4 @@ docker run -v $FIN:$FIN -v $DIR:$DIR -v $WDIR:$WDIR -v $LOGFILE:$LOGFILE indoc/d
 ### c) Edited file will be: /dirA/dirB/fname_edited.zip
 
 ### See file sample_run.sh for running it as current user.
+
