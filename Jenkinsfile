@@ -1,25 +1,27 @@
 pipeline {
     agent { label 'master || small' }
     environment {
-      imagename_dcmedit_dev = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/dcmedit-dev"
-      imagename_filecopy_dev = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/filecopy-dev"
-      imagename_bids_validator_dev = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/bids-validator-dev"
-      imagename_dcmedit_staging = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/dcmedit"
-      imagename_filecopy_staging = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/filecopy"
-      imagename_bids_validator_staging = "registry-gitlab.indocresearch.org/pilot/internal_pipelines/bids-validator"
+      imagename_dcmedit_dev = "ghcr.io/pilotdataplatform/pipelines/dcmedit-dev"
+      imagename_filecopy_dev = "ghcr.io/pilotdataplatform/pipelines/filecopy-dev"
+      imagename_bids_validator_dev = "ghcr.io/pilotdataplatform/pipelines/bids-validator-dev"
+      imagename_dcmedit_staging = "ghcr.io/pilotdataplatform/pipelines/dcmedit"
+      imagename_filecopy_staging = "ghcr.io/pilotdataplatform/pipelines/filecopy"
+      imagename_bids_validator_staging = "ghcr.io/pilotdataplatform/pipelines/bids-validator"
       commit = sh(returnStdout: true, script: 'git describe --always').trim()
-      registryCredential = 'pilot-gitlab-registry'
+      registryCredential = 'pilot-ghcr'
+      registryURLBase = "https://ghcr.io"
+      registryURL = "https://github.com/PilotDataPlatform/pipelines.git" 
       dockerImage = ''
     }
 
     stages {
 
     stage('Git clone for dev') {
-        when {branch "k8s-dev"}
+        when {branch "develop"}
         steps{
           script {
-          git branch: "k8s-dev",
-              url: 'https://git.indocresearch.org/pilot/internal_pipelines.git',
+          git branch: "develop",
+              url: "$registryURL",
               credentialsId: 'lzhao'
             }
         }
@@ -29,14 +31,14 @@ pipeline {
       when {
           allOf {
               changeset "dcmedit/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry('https://registry-gitlab.indocresearch.org', registryCredential) {
-                customImage = docker.build("registry-gitlab.indocresearch.org/pilot/internal_pipelines/dcmedit-dev:v0.1",  "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} --add-host git.indocresearch.org:10.4.3.151 ./dcmedit")
+            docker.withRegistry("$registryURL", registryCredential) {
+                customImage = docker.build("$imagename_dcmedit_dev:v0.1",  "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./dcmedit")
                 customImage.push()
             }
           }
@@ -47,7 +49,7 @@ pipeline {
       when {
           allOf {
               changeset "dcmedit/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
@@ -59,14 +61,14 @@ pipeline {
       when {
           allOf {
               changeset "filecopy/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
-            docker.withRegistry('https://registry-gitlab.indocresearch.org', registryCredential) {
-                customImage = docker.build("registry-gitlab.indocresearch.org/pilot/internal_pipelines/filecopy-dev:v0.1", "--no-cache --add-host git.indocresearch.org:10.4.3.151 ./filecopy")
+            docker.withRegistry("$registryURL", registryCredential) {
+                customImage = docker.build("$imagename_filecopy_dev:v0.1", "--no-cache ./filecopy")
                 customImage.push()
             }
           }
@@ -78,7 +80,7 @@ pipeline {
       when {
           allOf {
               changeset "filecopy/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
@@ -90,14 +92,14 @@ pipeline {
       when {
           allOf {
               changeset "bids-validator/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
         script {
           withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]){
-            docker.withRegistry('https://registry-gitlab.indocresearch.org', registryCredential) {
-                customImage = docker.build("registry-gitlab.indocresearch.org/pilot/internal_pipelines/bids-validator-dev:v0.1", " --add-host git.indocresearch.org:10.4.3.151 ./bids-validator")
+            docker.withRegistry("$registryURL", registryCredential) {
+                customImage = docker.build("$imagename_bids_validator_dev:v0.1", "./bids-validator")
                 customImage.push()
             }
           }
@@ -109,13 +111,14 @@ pipeline {
       when {
           allOf {
               changeset "bids-validator/**"
-              branch "k8s-dev"
+              branch "develop"
             }
       }
       steps{
         sh "docker rmi $imagename_bids_validator_dev:v0.1"
       }
     }
+/**        
     stage('Git clone staging') {
         when {branch "k8s-staging"}
         steps{
@@ -218,6 +221,7 @@ pipeline {
         sh "docker rmi $imagename_bids_validator_staging:v0.1"
       }
     }
+**/    
   }
 
   post {
