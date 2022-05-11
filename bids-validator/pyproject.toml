@@ -5,7 +5,7 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 requests = "^2.27.1"
 minio = "^7.1.7"
 xmltodict = "^0.12.0"
