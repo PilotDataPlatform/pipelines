@@ -1,0 +1,5 @@
+minio==7.0.4
+requests==2.25.1
+python-dotenv==0.19.1
+pydantic==1.8.2
+uvicorn==0.12.3

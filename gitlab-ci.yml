@@ -1,0 +1,69 @@
+image: docker:latest
+
+variables:
+  REGISTRY_DEV: 10.3.7.221:5000
+  REGISTRY_STAGING: 10.3.7.241:5000
+  DCMEDIT_CONTAINER_IMAGE_DEV: ${REGISTRY_DEV}/dcmedit:v0.1
+  DCMEDIT_CONTAINER_IMAGE_STAGING: ${REGISTRY_STAGING}/dcmedit:v0.1
+  FILECOPY_CONTAINER_IMAGE_DEV: ${REGISTRY_DEV}/filecopy:v0.1
+  FILECOPY_CONTAINER_IMAGE_STAGING: ${REGISTRY_STAGING}/filecopy:v0.1
+
+
+dev-build-dcmedit:
+  stage: build
+  tags:
+    - deployement
+  only:
+    refs:
+      - k8s-dev
+    changes:
+      - dcmedit/*
+  script:
+    - docker login ${REGISTRY_DEV} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${DCMEDIT_CONTAINER_IMAGE_DEV} dcmedit/.
+    - docker push ${DCMEDIT_CONTAINER_IMAGE_DEV}
+
+staging-build-dcmedit:
+  stage: build
+  tags:
+    - deployement
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - dcmedit/*
+  script:
+    - docker login ${REGISTRY_STAGING} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${DCMEDIT_CONTAINER_IMAGE_STAGING} dcmedit/.
+    - docker push ${DCMEDIT_CONTAINER_IMAGE_STAGING}
+
+
+dev-build-filecopy:
+  stage: build
+  tags:
+    - deployement
+  only:
+    refs:
+      - k8s-dev
+    changes:
+      - filecopy/*
+      - filecopy/scripts/*
+  script:
+    - docker login ${REGISTRY_DEV} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${FILECOPY_CONTAINER_IMAGE_DEV} filecopy/.
+    - docker push ${FILECOPY_CONTAINER_IMAGE_DEV}
+
+staging-build-filecopy:
+  stage: build
+  tags:
+    - deployement
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - filecopy/*
+      - filecopy/scripts/*
+  script:
+    - docker login ${REGISTRY_STAGING} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${FILECOPY_CONTAINER_IMAGE_STAGING} filecopy/.
+    - docker push ${FILECOPY_CONTAINER_IMAGE_STAGING}

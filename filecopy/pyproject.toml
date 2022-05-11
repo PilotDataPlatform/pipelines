@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "filecopy"
+version = "0.2.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.9"
+logger = "0.1.0"
+click = "8.1.2"
+itsdangerous = "1.1.0"
+minio = "7.0.3"
+psycopg2-binary = "2.9.3"
+pydantic = "1.8.2"
+PyJWT = "1.4.2"
+requests = "2.24.0"
+python-dotenv = "0.19.1"
+SQLAlchemy = "1.4.27"
+xmltodict = "0.12.0"
+pilot-platform-common = "0.0.25"
+
+[tool.poetry.dev-dependencies]
+pytest = "6.2.5"
+pytest-cov = "2.11.1"
+pytest-httpserver = "1.0.2"
+pytest-mock = "3.6.1"
+Faker = "9.8.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

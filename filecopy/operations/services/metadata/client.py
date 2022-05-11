@@ -1,0 +1,318 @@
+import logging
+import time
+from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+from operations.minio_client import MinioClient
+from operations.models import Node
+from operations.models import NodeList
+from operations.models import ResourceType
+from operations.models import ZoneType
+from requests import Session
+from sqlalchemy import null
+
+logger = logging.getLogger(__name__)
+
+
+class MetadataServiceClient:
+    def __init__(
+        self, endpoint: str, minio_endpoint: str, core_zone_label: str, temp_dir: str, neo4j_endpoint: str
+    ) -> None:
+        self.endpoint_v1 = f'{endpoint}/v1/'
+        self.client = Session()
+
+        self.minio_endpoint = minio_endpoint
+        self.core_zone_label = core_zone_label
+        self.temp_dir = temp_dir
+        self.neo4j_endpoint = neo4j_endpoint
+
+    def get_item_by_id(self, node_id: str) -> Node:
+        nodes = self.get_items_by_ids([node_id])
+        return nodes[node_id]
+
+    def get_items_by_ids(self, ids: list) -> Dict[str, Node]:
+        parameter = {'ids': ids}
+        response = self.client.get(f'{self.endpoint_v1}items/batch/', params=parameter)
+        if response.status_code != 200:
+            raise Exception(f'Unable to get nodes by ids "{ids}".')
+
+        results = response.json()['result']
+
+        if len(results) != len(ids):
+            raise Exception(
+                f'Number of returned nodes does not match number \
+                    of requested ids "{ids}".'
+            )
+
+        nodes = {node.id: node for node in NodeList(results)}
+
+        return nodes
+
+    def get_project_by_code(self, project_code: str) -> Node:
+        ##################################
+        # TODO: Refactory get project by code after project API ready
+        # https://indocconsortium.atlassian.net/browse/PILOT-1003
+        response = self.client.post(
+            f'{self.neo4j_endpoint}/v1/neo4j/nodes/Container/query', json={'code': project_code}
+        )
+
+        if response.status_code != 200:
+            raise Exception(f'Unable to get project by code "{project_code}".')
+
+        results = response.json()
+
+        if len(results) != 1:
+            raise Exception('More than one or zero projects has been received.')
+
+        return Node(results.pop())
+
+    def get_nodes_tree(self, start_folder_id: str, traverse_subtrees: bool = False) -> NodeList:
+        parent_folder_response = self.client.get('{}item/{}'.format(self.endpoint_v1, start_folder_id))
+        parent_folder = parent_folder_response.json()['result']
+        if parent_folder_response.status_code != 200:
+            raise Exception(
+                f'Unable to get parent folder starting \
+                    from "{start_folder_id}".'
+            )
+
+        parameters = {
+            'archived': False,
+            'zone': parent_folder['zone'],
+            'container_code': parent_folder['container_code'],
+            'parent_path': self.format_folder_path(parent_folder, '.'),
+            'recursive': traverse_subtrees,
+        }
+        node_query_url = self.endpoint_v1 + 'items/search/'
+        response = self.client.get(node_query_url, params=parameters)
+
+        if response.status_code != 200:
+            raise Exception(f'Unable to get nodes tree starting from "{start_folder_id}".')
+
+        nodes = NodeList(response.json()['results'])
+        return nodes
+
+    def get_node(self, zone: str, project_code: str, file_path: Union[Path, str]) -> Optional[Node]:
+        item_list = str(file_path).split('/')
+        if len(item_list) < 2:
+            raise Exception('Invalid item path')
+        else:
+            folder_parent = item_list[:-1]
+            parent, node_name = '.'.join(folder_parent), item_list[-1]
+
+        item_zone = {'greenroom': 0, 'core': 1}.get(zone)
+        parameters = {
+            'archived': False,
+            'zone': item_zone,
+            'container_code': project_code,
+            'recursive': False,
+            'parent_path': parent,
+            'name': node_name,
+        }
+        node_query_url = self.endpoint_v1 + 'items/search/'
+        response = self.client.get(node_query_url, params=parameters)
+        node = response.json()['result']
+        if node:
+            return Node(node)
+        return None
+
+    def is_file_exists(self, zone: str, project_code: str, path: Union[Path, str]) -> bool:
+        """Check if file already exists at specified path."""
+
+        node = self.get_node(zone, project_code, path)
+
+        return bool(node)
+
+    def is_folder_exists(self, zone: str, project_code: str, path: Union[Path, str]) -> bool:
+        """Check if folder already exists within project at specified path."""
+
+        node = self.get_node(zone, project_code, path)
+
+        return bool(node)
+
+    def update_node(self, node: Node, update_json: Dict[str, Any]) -> Dict[str, Any]:
+        response = self.client.put(url=f'{self.endpoint_v1}item/', params={'id': node.get('id')}, json=update_json)
+
+        if response.status_code != 200:
+            raise Exception(
+                f'Unable to update node with node \
+                id "{node["id"]}".'
+            )
+
+        return response.json()
+
+    def format_folder_path(self, node: Node, divider: str) -> str:
+        parent_path = node.get('parent_path', None)
+        if parent_path:
+            path = parent_path.replace('.', divider) if '.' in parent_path else parent_path
+            return '{}{}{}'.format(path, divider, node.get('name'))
+        return node.get('name')
+
+    def create_node_with_parent(self, node_property) -> Node:
+        """create the node with following attribute."""
+        create_node_url = self.endpoint_v1 + 'item/'
+        response = self.client.post(create_node_url, json=node_property)
+        new_node = response.json()['result']
+        return Node(new_node)
+
+    def move_node_to_trash(self, node_id: str) -> List:
+        patch_node_url = self.endpoint_v1 + 'item/'
+        parameter = {'id': node_id, 'archived': True}
+        response = self.client.patch(patch_node_url, params=parameter)
+        trash_node = response.json()['result']
+        return trash_node
+
+    def create_file_node(
+        self,
+        project: str,
+        source_file: Node,
+        parent_node: Node,
+        folder_display_path: Path,
+        minio_client: MinioClient,
+        tags: Optional[List] = None,
+        attribute: Optional[dict] = None,
+        new_name: Optional[str] = None,
+        system_tags: Optional[List] = None,
+    ) -> Tuple[Node, str]:
+        if tags is None:
+            tags = []
+
+        if attribute is None:
+            attribute = {}
+
+        if system_tags is None:
+            system_tags = []
+
+        file_name = new_name if new_name else source_file.get('name')
+
+        file_display_path = folder_display_path / file_name
+        location = f'minio://{self.minio_endpoint}/core-{project}/{file_display_path}'
+
+        payload = {
+            'parent': parent_node.get('id'),
+            'parent_path': self.format_folder_path(parent_node, '.'),
+            'type': 'file',
+            'zone': ZoneType.CORE,
+            'name': file_name,
+            'size': source_file.get('size', 0),
+            'owner': source_file.get('owner'),
+            'container_code': project,
+            'container_type': 'project',
+            'location_uri': location,
+            'version': '',
+            'tags': tags,
+            'system_tags': system_tags,
+            'attributes': attribute,
+            'attribute_template_id': '',
+        }
+
+        # adding the attribute set if exist
+        manifest = source_file['extended']['extra'].get('attributes')
+        if manifest:
+            payload['attribute_template_id'] = list(manifest.keys())[0]
+            payload['attributes'] = manifest
+
+        try:
+            # minio location is
+            # minio://http://<end_point>/bucket/user/object_path
+            src_minio_path = source_file['storage'].get('location_uri').split('//')[-1]
+            _, src_bucket, src_obj_path = tuple(src_minio_path.split('/', 2))
+            target_minio_path = location.split('//')[-1]
+            _, target_bucket, target_obj_path = tuple(target_minio_path.split('/', 2))
+
+            # here the minio api only accept the 5GB in copy.
+            # if >5GB we need to download
+            # to local then reupload to target
+            file_size_gb = minio_client.client.stat_object(src_bucket, src_obj_path).size
+            if file_size_gb < 5e9:
+                logger.info('File size less than 5GiB')
+                logger.info(
+                    f'Copying object from "{src_bucket}/{src_obj_path}" to \
+                        "{target_bucket}/{target_obj_path}".'
+                )
+                result = minio_client.copy_object(target_bucket, target_obj_path, src_bucket, src_obj_path)
+                version_id = result.version_id
+            else:
+                logger.info('File size greater than 5GiB')
+                temp_path = self.temp_dir + str(time.time())
+                minio_client.client.fget_object(src_bucket, src_obj_path, temp_path)
+                logger.info(f'File fetched to local disk: {temp_path}')
+                result = minio_client.fput_object(target_bucket, target_obj_path, temp_path)
+                version_id = result.version_id
+
+            logger.info(f'Minio Copy {src_bucket}/{src_obj_path} Success')
+            payload['version'] = version_id
+            new_file_node = self.create_node_with_parent(payload)
+        except Exception:
+            logger.exception('Error when copying.')
+            raise
+
+        return new_file_node, version_id
+
+    def create_folder_node(
+        self,
+        project_code: str,
+        source_folder: Node,
+        parent_node: Node,
+        tags: Optional[List[str]] = None,
+        new_name: Optional[str] = None,
+        system_tags: Optional[List[str]] = None,
+    ) -> Node:
+        if tags is None:
+            tags = []
+
+        if system_tags is None:
+            system_tags = []
+
+        folder_name = source_folder.get('name')
+        if new_name is not None:
+            folder_name = new_name
+
+        # then copy the node under the dataset
+        payload = {
+            'parent': parent_node.get('id'),
+            'parent_path': self.format_folder_path(parent_node, '.'),
+            'type': 'file',
+            'zone': ZoneType.CORE,
+            'name': folder_name,
+            # The folder does not have size
+            'size': null,
+            'owner': source_folder.get('owner'),
+            'container_code': project_code,
+            'container_type': 'project',
+            # The folder does not have location uri
+            'location_uri': '',
+            'version': '',
+            'tags': tags,
+            'system_tags': system_tags,
+        }
+
+        folder_node = self.create_node_with_parent(payload)
+
+        return folder_node
+
+    def archived_node(self, source_file: Node, minio_client) -> Node:
+        trash_node = self.move_node_to_trash(source_file.id)
+
+        try:
+            # minio location is
+            # minio://http://<end_point>/bucket/user/object_path
+            for item in trash_node:
+                if item['type'] == ResourceType.FILE:
+                    src_minio_path = item['storage'].get('location_uri').split('//')[-1]
+                    _, src_bucket, src_obj_path = tuple(src_minio_path.split('/', 2))
+
+                    minio_client.client.remove_object(src_bucket, src_obj_path)
+                    logger.info(
+                        f'Minio Delete \
+                        {src_bucket}/{src_obj_path} Success'
+                    )
+        except Exception:
+            logger.exception('Error when removing file.')
+            raise
+
+        return trash_node

@@ -1,0 +1,16 @@
+# Folders
+.git
+.venv
+__pycache__
+venv
+env
+kubernetes
+
+# Files
+.DS_Store
+.env.local
+.gitignore
+.gitlab-ci*
+gitlab-ci*
+Dockerfile*
+Jenkinsfile
