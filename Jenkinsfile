@@ -36,14 +36,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_dcmedit_dev:edge", "./dcmedit")
-                customImage.push()
-            }
-          }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build("$imagename_dcmedit_dev:edge", "./dcmedit")
+            customImage.push()
+          }          
         }
       }
+    }    
     stage('DEV Remove dcmedit image') {
       when {
           allOf {
@@ -65,15 +64,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_filecopy_dev:edge", "--no-cache ./filecopy")
-                customImage.push()
-            }         
-          }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build("$imagename_filecopy_dev:edge", "--no-cache ./filecopy")
+            customImage.push()
+          }         
         }
       }
-
+    }
     stage('DEV Remove filecopy image') {
       when {
           allOf {
@@ -95,15 +92,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_bids_validator_dev:edge", "./bids-validator")
-                customImage.push()
-            }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build("$imagename_bids_validator_dev:edge", "./bids-validator")
+            customImage.push()
           }
         }
       }
-
+    }    
     stage('DEV Remove bids-validator image') {
       when {
           allOf {
@@ -136,15 +131,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_dcmedit_staging:stable", "./dcmedit")
-                customImage.push()
-            }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build("$imagename_dcmedit_staging:stable", "./dcmedit")
+            customImage.push()
           }
         }
       }
-
+    }
     stage('STAGING Remove dcmedit image') {
       when {
           allOf {
@@ -166,16 +159,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_filecopy_staging:stable", "./filecopy")
-                customImage.push()
-            }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build("$imagename_filecopy_staging:stable", "./filecopy")
+            customImage.push()
           }
         }
       }
-
-
+    }  
     stage('STAGING Remove filecopy image') {
       when {
           allOf {
@@ -196,14 +186,13 @@ pipeline {
       }
       steps{
         script {
-          withCredentials(
-            docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build(" $imagename_bids_validator_staging:stable", "./bids-validator")
-                customImage.push()
-            }
+          docker.withRegistry("$registryURLBase", registryCredential) {
+            customImage = docker.build(" $imagename_bids_validator_staging:stable", "./bids-validator")
+            customImage.push()
           }
         }
       }
+    }  
     stage('STAGING Remove bids-validator image') {
       when {
           allOf {
