@@ -51,7 +51,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_dcmedit_dev:v0.1"
+        sh "docker rmi $imagename_dcmedit_dev:edge"
       }
     }
 
