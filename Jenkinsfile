@@ -1,9 +1,9 @@
 pipeline {
     agent { label 'master || small' }
     environment {
-      imagename_dcmedit_dev = "ghcr.io/pilotdataplatform/pipelines/dcmedit-dev"
-      imagename_filecopy_dev = "ghcr.io/pilotdataplatform/pipelines/filecopy-dev"
-      imagename_bids_validator_dev = "ghcr.io/pilotdataplatform/pipelines/bids-validator-dev"
+      imagename_dcmedit_dev = "ghcr.io/pilotdataplatform/pipelines/dcmedit"
+      imagename_filecopy_dev = "ghcr.io/pilotdataplatform/pipelines/filecopy"
+      imagename_bids_validator_dev = "ghcr.io/pilotdataplatform/pipelines/bids-validator"
       imagename_dcmedit_staging = "ghcr.io/pilotdataplatform/pipelines/dcmedit"
       imagename_filecopy_staging = "ghcr.io/pilotdataplatform/pipelines/filecopy"
       imagename_bids_validator_staging = "ghcr.io/pilotdataplatform/pipelines/bids-validator"
@@ -36,15 +36,14 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_dcmedit_dev:v0.1",  "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./dcmedit")
+                customImage = docker.build("$imagename_dcmedit_dev:edge", "./dcmedit")
                 customImage.push()
             }
           }
+        }
       }
-    }
-    }
     stage('DEV Remove dcmedit image') {
       when {
           allOf {
@@ -66,15 +65,14 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_filecopy_dev:v0.1", "--no-cache ./filecopy")
+                customImage = docker.build("$imagename_filecopy_dev:edge", "--no-cache ./filecopy")
                 customImage.push()
-            }
+            }         
           }
         }
       }
-    }
 
     stage('DEV Remove filecopy image') {
       when {
@@ -84,7 +82,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_filecopy_dev:v0.1"
+        sh "docker rmi $imagename_filecopy_dev:edge"
       }
     }
 
@@ -97,15 +95,14 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]){
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_bids_validator_dev:v0.1", "./bids-validator")
+                customImage = docker.build("$imagename_bids_validator_dev:edge", "./bids-validator")
                 customImage.push()
             }
           }
         }
       }
-    }
 
     stage('DEV Remove bids-validator image') {
       when {
@@ -115,7 +112,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_bids_validator_dev:v0.1"
+        sh "docker rmi $imagename_bids_validator_dev:edge"
       }
     }
 /**        
@@ -139,15 +136,14 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_dcmedit_staging:v0.1", "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./dcmedit")
+                customImage = docker.build("$imagename_dcmedit_staging:stable", "./dcmedit")
                 customImage.push()
             }
           }
         }
       }
-    }
 
     stage('STAGING Remove dcmedit image') {
       when {
@@ -157,7 +153,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_dcmedit_staging:v0.1"
+        sh "docker rmi $imagename_dcmedit_staging:stable"
       }
     }
 
@@ -170,15 +166,15 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build("$imagename_filecopy_staging:v0.1", "--build-arg REGISTRY_USERNAME=${PIP_USERNAME} --build-arg REGISTRY_PASSWORD=${PIP_PASSWORD} ./filecopy")
+                customImage = docker.build("$imagename_filecopy_staging:stable", "./filecopy")
                 customImage.push()
             }
           }
         }
       }
-    }
+
 
     stage('STAGING Remove filecopy image') {
       when {
@@ -188,7 +184,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_filecopy_staging:v0.1"
+        sh "docker rmi $imagename_filecopy_staging:stable"
       }
     }
     stage('STAGING Building and push bids-validator image') {
@@ -200,16 +196,14 @@ pipeline {
       }
       steps{
         script {
-          withCredentials([usernamePassword(credentialsId:'readonly', usernameVariable: 'PIP_USERNAME', passwordVariable: 'PIP_PASSWORD')]) {
+          withCredentials(
             docker.withRegistry("$registryURLBase", registryCredential) {
-                customImage = docker.build(" $imagename_bids_validator_staging:v0.1", "--build-arg pip_username=${PIP_USERNAME} --build-arg pip_password=${PIP_PASSWORD} ./bids-validator")
+                customImage = docker.build(" $imagename_bids_validator_staging:stable", "./bids-validator")
                 customImage.push()
             }
+          }
         }
       }
-    }
-    }
-
     stage('STAGING Remove bids-validator image') {
       when {
           allOf {
@@ -218,7 +212,7 @@ pipeline {
             }
       }
       steps{
-        sh "docker rmi $imagename_bids_validator_staging:v0.1"
+        sh "docker rmi $imagename_bids_validator_staging:stable"
       }
     }
 **/    
