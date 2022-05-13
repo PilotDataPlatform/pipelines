@@ -15,7 +15,7 @@ LOGFILE=/LOGS/dcm.log # file has to exist
 
 ### b) Run docker using the command:
 
-docker run -v $FIN:$FIN -v $DIR:$DIR -v $WDIR:$WDIR -v $LOGFILE:$LOGFILE indoc/dcmedit:v0.1 /usr/bin/python3 scripts/dcm_edit.py -i $FIN -o $DIR -t $WORKDIR -l $LOGFILE
+docker run -v $FIN:$FIN -v $DIR:$DIR -v $WDIR:$WDIR -v $LOGFILE:$LOGFILE indoc/dcmedit:edge /usr/bin/python3 scripts/dcm_edit.py -i $FIN -o $DIR -t $WORKDIR -l $LOGFILE
 
 ### c) Edited file will be: /dirA/dirB/fname_edited.zip
 

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
-FROM python:3.7-buster
+FROM python:3.8-buster
 LABEL maintainer="Samantha Zhang <szhang@indocresearch.org>"
 
 RUN apt-get update -y && apt-get install -y rsync python3-pip python3-dev build-essential \

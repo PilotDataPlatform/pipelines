@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     DATA_OPS_UT: str = ''
     DATA_OPS_UT_V2: str = ''
 
+    # neo4j path, will be removed once dataset code moved
+    NEO4J_SERVICE: str
+
     DATASET_SERVICE: str = ''
     QUEUE_SERVICE: str = ''
 
@@ -79,7 +82,7 @@ class Settings(BaseSettings):
 
         @classmethod
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
-            return (load_vault_settings, env_settings, init_settings, file_secret_settings)
+            return (env_settings, load_vault_settings, init_settings, file_secret_settings)
 
 
 @lru_cache()

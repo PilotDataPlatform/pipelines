@@ -55,15 +55,12 @@ class Minio_Client_:
         self.refresh_token = result.json().get('refresh_token')
 
         jwt_object = result.json()
-        # print(jwt_object)
-
         return jwt_object
 
     # use the function above to create a credential object in minio
     # it will use the jwt function to refresh token if token expired
     def get_provider(self):
         minio_http = ('https://' if ConfigClass.MINIO_HTTPS else 'http://') + ConfigClass.MINIO_ENDPOINT
-        # print(minio_http)
         provider = ClientGrantsProvider(
             self._get_jwt,
             minio_http,

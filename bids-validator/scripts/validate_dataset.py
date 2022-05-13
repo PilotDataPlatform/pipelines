@@ -57,10 +57,16 @@ def parse_inputs() -> dict:
 
 
 def get_dataset_code(dataset_id) -> str:
-    # query from dataset service to get dataset_code
+    # TODO: query from dataset service to get dataset_code
     # Required finished up after dataset refactory
-    dataset_code = ''
-    return dataset_code
+    url = f'{ConfigClass.NEO4J_SERVICE}/v1/neo4j/nodes/geid/{dataset_id}'
+    try:
+        response = requests.get(url)
+        dataset_code = response.json()[0]['code']
+        return dataset_code
+    except Exception:
+        logger_info(f'Fail to get dataset code by {dataset_id}')
+        raise
 
 
 def send_message(dataset_id, status, bids_output) -> None:
@@ -100,7 +106,7 @@ def get_files(dataset_code) -> list:
     query = {
         'archived': False,
         'zone': 1,
-        'container': dataset_code,
+        'container_code': dataset_code,
         'container_type': 'dataset',
         'recursive': True}
 
@@ -207,16 +213,10 @@ def main():
             """
             SELECT *
             FROM {}.bids_results b
-            """.format(
-                table_name
-            )
+            """.format(table_name)
             + """
             WHERE b.dataset_geid = %s;
-            """,
-            [
-                dataset_id,
-            ],
-        )
+            """, [dataset_id, ])
         record = cur.fetchone()
 
         current_time = datetime.utcfromtimestamp(time.time())
