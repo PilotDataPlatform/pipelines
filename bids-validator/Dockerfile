@@ -15,7 +15,6 @@ LABEL maintainer="Samantha Zhang <szhang@indocresearch.org>"
 
 RUN apt-get update -y && apt-get install -y rsync python3-pip python3-dev build-essential \
     default-jre-headless locales nodejs npm && rm -rf /var/lib/apt/lists/*
-RUN pip3 install --upgrade pip
 
 RUN npm install -g bids-validator@1.8.0
 
