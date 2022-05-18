@@ -23,7 +23,7 @@ from pydantic import Extra
 
 # load env var from local env file for local test
 load_dotenv()
-SRV_NAMESPACE = os.environ.get('APP_NAME', 'service_dataset')
+SRV_NAMESPACE = os.environ.get('APP_NAME', 'bids_validator')
 CONFIG_CENTER_ENABLED = os.environ.get('CONFIG_CENTER_ENABLED', 'false')
 
 
