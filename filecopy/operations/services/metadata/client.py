@@ -20,6 +20,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from common import ProjectException
 from operations.minio_client import MinioClient
 from operations.models import Node
 from operations.models import NodeList
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class MetadataServiceClient:
     def __init__(
-        self, endpoint: str, minio_endpoint: str, core_zone_label: str, temp_dir: str, neo4j_endpoint: str
+        self, endpoint: str, minio_endpoint: str, core_zone_label: str, temp_dir: str, project_client: str
     ) -> None:
         self.endpoint_v1 = f'{endpoint}/v1/'
         self.client = Session()
@@ -41,7 +42,7 @@ class MetadataServiceClient:
         self.minio_endpoint = minio_endpoint
         self.core_zone_label = core_zone_label
         self.temp_dir = temp_dir
-        self.neo4j_endpoint = neo4j_endpoint
+        self.project_client = project_client
 
     def get_item_by_id(self, node_id: str) -> Node:
         nodes = self.get_items_by_ids([node_id])
@@ -65,23 +66,14 @@ class MetadataServiceClient:
 
         return nodes
 
-    def get_project_by_code(self, project_code: str) -> Node:
-        ##################################
-        # TODO: Refactory get project by code after project API ready
-        # https://indocconsortium.atlassian.net/browse/PILOT-1003
-        response = self.client.post(
-            f'{self.neo4j_endpoint}/v1/neo4j/nodes/Container/query', json={'code': project_code}
-        )
+    async def get_project_by_code(self, project_code: str) -> Node:
+        try:
+            project = await self.project_client.get(code=project_code)
+            result = await project.json()
+        except ProjectException:
+            raise ProjectException(f'Unable to get project by code "{project_code}".')
 
-        if response.status_code != 200:
-            raise Exception(f'Unable to get project by code "{project_code}".')
-
-        results = response.json()
-
-        if len(results) != 1:
-            raise Exception('More than one or zero projects has been received.')
-
-        return Node(results.pop())
+        return Node(result)
 
     def get_nodes_tree(self, start_folder_id: str, traverse_subtrees: bool = False) -> NodeList:
         parent_folder_response = self.client.get('{}item/{}'.format(self.endpoint_v1, start_folder_id))

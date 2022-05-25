@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 import uuid
 from pathlib import Path
 from typing import List
@@ -17,6 +18,7 @@ from typing import Optional
 from typing import Set
 
 import click
+from common import ProjectClient
 from operations.config import get_settings
 from operations.managers import CopyManager
 from operations.managers import CopyPreparationManager
@@ -65,12 +67,10 @@ def copy(
 
     settings = get_settings()
 
+    project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
+
     metadata_service_client = MetadataServiceClient(
-        settings.METADATA_SERVICE,
-        settings.MINIO_ENDPOINT,
-        settings.CORE_ZONE_LABEL,
-        settings.TEMP_DIR,
-        settings.NEO4J_SERVICE,
+        settings.METADATA_SERVICE, settings.MINIO_ENDPOINT, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
     dataops_utility_client = DataopsUtilityClient(settings.DATA_OPS_UTIL)
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
@@ -122,7 +122,8 @@ def copy(
         traverser = Traverser(copy_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder.display_path)
 
-        project = metadata_service_client.get_project_by_code(project_code)
+        loop = asyncio.get_event_loop()
+        project = loop.run_until_complete(metadata_service_client.get_project_by_code(project_code))
 
         try:
             dataops_utility_client.lock_resources(copy_preparation_manager.read_lock_paths, ResourceLockOperation.READ)

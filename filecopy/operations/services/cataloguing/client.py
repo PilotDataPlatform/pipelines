@@ -23,6 +23,8 @@ class CataloguingServiceClient:
         """Function will create new entity in the Atlas."""
 
         payload.update({'uploader': operator})
+        payload.update({'project_code': payload.get('container_code')})
+        payload.update({'global_entity_id': payload.id})
         payload.update({'file_name': payload.get('name')})
         payload.update({'path': payload.get('location')})
         payload.update({'namespace': namespace})

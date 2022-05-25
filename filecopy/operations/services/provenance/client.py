@@ -23,7 +23,14 @@ class ProvenanceServiceClient:
         self.client = Session()
 
     def create_lineage_v3(
-        self, input_geid: str, output_geid: str, project_code: str, pipeline_name: str, pipeline_description: str
+        self,
+        input_id: str,
+        output_id: str,
+        input_name: str,
+        output_name: str,
+        project_code: str,
+        pipeline_name: str,
+        pipeline_description: str,
     ) -> Dict[str, Any]:
         """Create lineage between input and output into atlas.
 
@@ -31,8 +38,10 @@ class ProvenanceServiceClient:
         """
 
         payload = {
-            'input_geid': input_geid,
-            'output_geid': output_geid,
+            'input_geid': input_id,
+            'output_geid': output_id,
+            'input_name': input_name,
+            'output_name': output_name,
             'project_code': project_code,
             'pipeline_name': pipeline_name,
             'description': pipeline_description,
@@ -40,7 +49,7 @@ class ProvenanceServiceClient:
 
         response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload)
         if response.status_code != 200:
-            raise Exception(f'Unable to create lineage between "{input_geid} and "{output_geid}" in atlas.')
+            raise Exception(f'Unable to create lineage between "{input_id} and "{output_id}" in atlas.')
 
         return response.json()
 
@@ -68,18 +77,18 @@ class ProvenanceServiceClient:
 
         return response.json()
 
-    def deprecate_index_in_es(self, geid: str) -> Dict[str, Any]:
+    def deprecate_index_in_es(self, _id: str) -> Dict[str, Any]:
         """Deprecate the file or folder search index in Elasticsearch."""
 
         payload = {
-            'global_entity_id': geid,
+            'global_entity_id': _id,
             'updated_fields': {
                 'archived': True,
             },
         }
         response = self.client.put(f'{self.endpoint_v1}/entity/file', json=payload)
         if response.status_code != 200:
-            raise Exception(f'Unable to deprecate search index in the Elasticsearch for "{geid}".')
+            raise Exception(f'Unable to deprecate search index in the Elasticsearch for "{_id}".')
 
         return response.json()
 

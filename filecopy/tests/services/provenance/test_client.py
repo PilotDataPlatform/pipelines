@@ -10,13 +10,14 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+
 class TestProvenanceServiceClient:
     def test_create_lineage_v3_returns_response_body(self, provenance_service_client, httpserver, fake):
         expected_body = fake.pydict(value_types=['str', 'int'])
         httpserver.expect_request('/v1/lineage/').respond_with_json(expected_body)
 
         received_body = provenance_service_client.create_lineage_v3(
-            fake.geid(), fake.geid(), fake.word(), fake.word(), fake.word()
+            fake.geid(), fake.geid(), fake.word(), fake.word(), fake.word(), fake.word(), fake.word()
         )
 
         assert received_body == expected_body
