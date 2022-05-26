@@ -13,7 +13,6 @@
 import asyncio
 import uuid
 from pathlib import Path
-from typing import List
 from typing import Optional
 from typing import Set
 
@@ -176,7 +175,3 @@ def copy(
             dataops_utility_client.update_job(session_id, job_id, JobStatus.TERMINATED)
         except Exception as e:
             click.echo(f'Update job error: {e}')
-
-
-# if __name__=='__main__':
-#     copy()
