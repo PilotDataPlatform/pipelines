@@ -61,7 +61,6 @@ class Settings(BaseSettings):
     RDS_SCHEMA_DEFAULT: str
     RDS_DB_URI: str
 
-    NEO4J_SERVICE: str
     PROVENANCE_SERVICE: str
     DATA_OPS_UTIL: str
     CATALOGUING_SERVICE: str
@@ -71,12 +70,19 @@ class Settings(BaseSettings):
 
     TEMP_DIR: str = ''
     COPIED_WITH_APPROVAL_TAG: str = 'copied-to-core'
+    PROJECT_SERVICE: str
+    REDIS_URL: str = ''
+    REDIS_USER: str = 'default'
+    REDIS_PASSWORD: str
+    REDIS_HOST: str
+    REDIS_PORT: str
 
     def __init__(self, *args: Any, **kwds: Any) -> None:
         super().__init__(*args, **kwds)
 
         self.MINIO_HOST = self.MINIO_ENDPOINT
         self.MINIO_ENDPOINT = ('https' if self.MINIO_HTTPS else 'http') + f'://{self.MINIO_HOST}'
+        self.REDIS_URL = f'redis://{self.REDIS_USER}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}'
 
     class Config:
         env_file = '.env'

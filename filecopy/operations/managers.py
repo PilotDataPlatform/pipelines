@@ -179,6 +179,8 @@ class CopyManager(BaseCopyManager):
         self.provenance_service_client.create_lineage_v3(
             source_node.id,
             target_node.id,
+            source_node.name,
+            target_node.name,
             self.project_code,
             self.pipeline_name,
             self.pipeline_desc,

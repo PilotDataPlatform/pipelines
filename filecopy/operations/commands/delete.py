@@ -10,11 +10,13 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 from pathlib import Path
 from typing import List
 from typing import Optional
 
 import click
+from common import ProjectClient
 from operations.config import get_settings
 from operations.managers import DeleteManager
 from operations.managers import DeletePreparationManager
@@ -31,7 +33,7 @@ from operations.traverser import Traverser
 
 @click.command()
 @click.option('--source-id', type=str, required=True)
-@click.option('--include-ids', type=List[str])
+@click.option('--include-ids', type=str, multiple=True)
 @click.option('--job-id', type=str, required=True)
 @click.option('--session-id', type=str, required=True)
 @click.option('--project-code', type=str, required=True)
@@ -53,13 +55,10 @@ def delete(
     click.echo(f'Starting delete process from "{source_id} including only "{include_ids}".')
 
     settings = get_settings()
+    project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
 
     metadata_service_client = MetadataServiceClient(
-        settings.METADATA_SERVICE,
-        settings.MINIO_ENDPOINT,
-        settings.CORE_ZONE_LABEL,
-        settings.TEMP_DIR,
-        settings.NEO4J_SERVICE,
+        settings.METADATA_SERVICE, settings.MINIO_ENDPOINT, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
     dataops_utility_client = DataopsUtilityClient(settings.DATA_OPS_UTIL)
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
@@ -95,7 +94,8 @@ def delete(
         traverser = Traverser(delete_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder)
 
-        project = metadata_service_client.get_project_by_code(project_code)
+        loop = asyncio.get_event_loop()
+        project = loop.run_until_complete(metadata_service_client.get_project_by_code(project_code))
 
         try:
             dataops_utility_client.lock_resources(

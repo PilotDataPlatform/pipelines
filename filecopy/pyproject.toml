@@ -5,7 +5,7 @@ description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 logger = "0.1.0"
 click = "8.1.2"
 itsdangerous = "1.1.0"
@@ -17,7 +17,9 @@ requests = "2.24.0"
 python-dotenv = "0.19.1"
 SQLAlchemy = "1.4.27"
 xmltodict = "0.12.0"
-pilot-platform-common = "0.0.25"
+python-json-logger = "^2.0.2"
+aioredis = "2.0.1"
+pilot-platform-common = "0.0.27"
 
 [tool.poetry.dev-dependencies]
 pytest = "6.2.5"
