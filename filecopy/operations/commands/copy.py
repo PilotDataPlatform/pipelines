@@ -38,7 +38,7 @@ from sqlalchemy import create_engine
 @click.command()
 @click.option('--source-id', type=str, required=True)
 @click.option('--destination-id', type=str, required=True)
-@click.option('--include-ids', type=List[str])
+@click.option('--include-ids', type=str, multiple=True)
 @click.option('--job-id', type=str, required=True)
 @click.option('--session-id', type=str, required=True)
 @click.option('--project-code', type=str, required=True)
@@ -176,3 +176,7 @@ def copy(
             dataops_utility_client.update_job(session_id, job_id, JobStatus.TERMINATED)
         except Exception as e:
             click.echo(f'Update job error: {e}')
+
+
+# if __name__=='__main__':
+#     copy()

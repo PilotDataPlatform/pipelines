@@ -33,7 +33,7 @@ from operations.traverser import Traverser
 
 @click.command()
 @click.option('--source-id', type=str, required=True)
-@click.option('--include-ids', type=List[str])
+@click.option('--include-ids', type=str, multiple=True)
 @click.option('--job-id', type=str, required=True)
 @click.option('--session-id', type=str, required=True)
 @click.option('--project-code', type=str, required=True)
