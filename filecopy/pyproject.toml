@@ -5,7 +5,7 @@ description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 logger = "0.1.0"
 click = "8.1.2"
 itsdangerous = "1.1.0"
