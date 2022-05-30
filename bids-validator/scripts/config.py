@@ -52,9 +52,6 @@ class Settings(BaseSettings):
     DATA_OPS_UT: str = ''
     DATA_OPS_UT_V2: str = ''
 
-    # neo4j path, will be removed once dataset code moved
-    NEO4J_SERVICE: str
-
     DATASET_SERVICE: str = ''
     QUEUE_SERVICE: str = ''
 
