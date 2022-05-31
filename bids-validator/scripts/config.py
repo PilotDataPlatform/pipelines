@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     SQL_DB_NAME: str = ''
 
     METADATA_SERVICE_V1: str = ''
+    SQLALCHEMY_DATABASE_URI: str = ''
 
     def __init__(self):
         super().__init__()
@@ -71,6 +72,7 @@ class Settings(BaseSettings):
         self.DATASET_SERVICE += '/v1'
         self.QUEUE_SERVICE += '/v1/'
         self.METADATA_SERVICE_V1 = self.METADATA_SERVICE + '/v1/'
+        self.SQLALCHEMY_DATABASE_URI = f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}/{self.RDS_DBNAME}'
 
     class Config:
         env_file = '.env'

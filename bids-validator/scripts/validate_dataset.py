@@ -19,9 +19,10 @@ import time
 import traceback
 from datetime import datetime
 
-import psycopg2
 import requests
 from config import ConfigClass
+from database_service import DatasetModel
+from database_service import DBConnection
 from locks import lock_nodes
 from locks import unlock_resource
 from minio_client import Minio_Client_
@@ -159,14 +160,8 @@ def main():
     logger_info('config set: ' + environment)
     try:
         # connect to the postgres database
-        conn = psycopg2.connect(
-            dbname=ConfigClass.RDS_DBNAME,
-            user=ConfigClass.RDS_USER,
-            password=ConfigClass.RDS_PWD,
-            host=ConfigClass.RDS_HOST,
-        )
-        cur = conn.cursor()
-        table_name = ConfigClass.SQL_DB_NAME
+        db = DBConnection()
+        db_session = db.session
 
         # get arguments
         dataset_id = args['dataset_id']
@@ -206,59 +201,39 @@ def main():
         # remove bids folder after validate
         shutil.rmtree(TEMP_FOLDER)
 
-        logger_info(f'Table name is: {table_name}')
-
-        cur.execute(
-            """
-            SELECT *
-            FROM {}.bids_results b
-            """.format(
-                table_name
+        record = (
+            db_session.query(
+                DatasetModel.dataset_geid,
+                DatasetModel.created_time,
+                DatasetModel.updated_time,
+                DatasetModel.validate_output,
             )
-            + """
-            WHERE b.dataset_geid = %s;
-            """,
-            [
-                dataset_id,
-            ],
+            .filter_by(dataset_geid=dataset_id)
+            .first()
         )
-        record = cur.fetchone()
 
         current_time = datetime.utcfromtimestamp(time.time())
 
         logger_info(f'Validation time: {current_time}')
 
-        # check whether the postgres database contains the record befor or not
+        # check whether the postgres database contains the record before or not
         if not record:
-            cur.execute(
-                """
-                INSERT INTO
-                {}.bids_results(dataset_geid, created_time, updated_time, validate_output)
-                """.format(
-                    table_name
-                )
-                + """
-                VALUES (%s, %s, %s, %s);
-                """,
-                [dataset_id, current_time, current_time, json.dumps(bids_output)],
+            bids_result = DatasetModel(
+                dataset_geid=dataset_id,
+                created_time=current_time,
+                updated_time=current_time,
+                validate_output=json.dumps(bids_output),
             )
-        else:
-            cur.execute(
-                """
-                UPDATE {}.bids_results
-                """.format(
-                    table_name
-                )
-                + """
-                SET validate_output = %s, updated_time = %s
-                WHERE dataset_geid = %s
-                ;
-                """,
-                [json.dumps(bids_output), current_time, dataset_id],
-            )
+            db_session.add(bids_result)
+            db_session.commit()
 
-        conn.commit()
-        conn.close()
+        else:
+            bids_result = (
+                db_session.query(DatasetModel)
+                .filter_by(dataset_geid=dataset_id)
+                .update({'validate_output': json.dumps(bids_output), 'updated_time': current_time})
+            )
+            db_session.commit()
 
         send_message(dataset_id, 'success', bids_output)
 
