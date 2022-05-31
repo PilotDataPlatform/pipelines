@@ -45,8 +45,8 @@ class DatasetModel(Base):
     __tablename__ = 'bids_results'
     __table_args__ = {'schema': ConfigClass.SQL_DB_NAME}
 
-    id = Column(Integer, primary_key=True)
-    dataset_geid = Column(String())
+    id = Column(Integer)
+    dataset_geid = Column(String(), unique=True, primary_key=True)
     created_time = Column(DateTime())
     updated_time = Column(DateTime())
     validate_output = Column(JSON)

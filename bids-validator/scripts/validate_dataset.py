@@ -26,6 +26,7 @@ from database_service import DBConnection
 from locks import lock_nodes
 from locks import unlock_resource
 from minio_client import Minio_Client_
+from sqlalchemy.dialects.postgresql import insert
 
 TEMP_FOLDER = './dataset/'
 
@@ -201,39 +202,26 @@ def main():
         # remove bids folder after validate
         shutil.rmtree(TEMP_FOLDER)
 
-        record = (
-            db_session.query(
-                DatasetModel.dataset_geid,
-                DatasetModel.created_time,
-                DatasetModel.updated_time,
-                DatasetModel.validate_output,
-            )
-            .filter_by(dataset_geid=dataset_id)
-            .first()
-        )
-
         current_time = datetime.utcfromtimestamp(time.time())
 
         logger_info(f'Validation time: {current_time}')
 
-        # check whether the postgres database contains the record before or not
-        if not record:
-            bids_result = DatasetModel(
-                dataset_geid=dataset_id,
-                created_time=current_time,
-                updated_time=current_time,
-                validate_output=json.dumps(bids_output),
-            )
-            db_session.add(bids_result)
-            db_session.commit()
+        # Insert the bids output if the database does not store any result before
+        # Otherwise update the bids output and updated time
+        insert_bids = insert(DatasetModel).values(
+            dataset_geid=dataset_id,
+            created_time=current_time,
+            updated_time=current_time,
+            validate_output=json.dumps(bids_output),
+        )
 
-        else:
-            bids_result = (
-                db_session.query(DatasetModel)
-                .filter_by(dataset_geid=dataset_id)
-                .update({'validate_output': json.dumps(bids_output), 'updated_time': current_time})
-            )
-            db_session.commit()
+        do_update_bids = insert_bids.on_conflict_do_update(
+            constraint='dataset_geid',
+            set_={DatasetModel.updated_time: current_time, DatasetModel.validate_output: json.dumps(bids_output)},
+            where=(DatasetModel.dataset_geid == dataset_id),
+        )
+        db_session.execute(do_update_bids)
+        db_session.commit()
 
         send_message(dataset_id, 'success', bids_output)
 
