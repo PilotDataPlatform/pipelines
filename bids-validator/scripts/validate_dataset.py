@@ -19,12 +19,14 @@ import time
 import traceback
 from datetime import datetime
 
-import psycopg2
 import requests
 from config import ConfigClass
+from database_service import DatasetModel
+from database_service import DBConnection
 from locks import lock_nodes
 from locks import unlock_resource
 from minio_client import Minio_Client_
+from sqlalchemy.dialects.postgresql import insert
 
 TEMP_FOLDER = './dataset/'
 
@@ -57,12 +59,10 @@ def parse_inputs() -> dict:
 
 
 def get_dataset_code(dataset_id) -> str:
-    # TODO: query from dataset service to get dataset_code
-    # Required finished up after dataset refactory
-    url = f'{ConfigClass.NEO4J_SERVICE}/v1/neo4j/nodes/geid/{dataset_id}'
+    url = f'{ConfigClass.DATASET_SERVICE}/dataset/{dataset_id}'
     try:
         response = requests.get(url)
-        dataset_code = response.json()[0]['code']
+        dataset_code = response.json()['result']['code']
         return dataset_code
     except Exception:
         logger_info(f'Fail to get dataset code by {dataset_id}')
@@ -108,7 +108,8 @@ def get_files(dataset_code) -> list:
         'zone': 1,
         'container_code': dataset_code,
         'container_type': 'dataset',
-        'recursive': True}
+        'recursive': True,
+    }
 
     try:
         resp = requests.get(ConfigClass.METADATA_SERVICE_V1 + 'items/search/', params=query)
@@ -160,14 +161,8 @@ def main():
     logger_info('config set: ' + environment)
     try:
         # connect to the postgres database
-        conn = psycopg2.connect(
-            dbname=ConfigClass.RDS_DBNAME,
-            user=ConfigClass.RDS_USER,
-            password=ConfigClass.RDS_PWD,
-            host=ConfigClass.RDS_HOST,
-        )
-        cur = conn.cursor()
-        table_name = ConfigClass.SQL_DB_NAME
+        db = DBConnection()
+        db_session = db.session
 
         # get arguments
         dataset_id = args['dataset_id']
@@ -207,53 +202,26 @@ def main():
         # remove bids folder after validate
         shutil.rmtree(TEMP_FOLDER)
 
-        logger_info(f'Table name is: {table_name}')
-
-        cur.execute(
-            """
-            SELECT *
-            FROM {}.bids_results b
-            """.format(table_name)
-            + """
-            WHERE b.dataset_geid = %s;
-            """, [dataset_id, ])
-        record = cur.fetchone()
-
         current_time = datetime.utcfromtimestamp(time.time())
 
         logger_info(f'Validation time: {current_time}')
 
-        # check whether the postgres database contains the record befor or not
-        if not record:
-            cur.execute(
-                """
-                INSERT INTO
-                {}.bids_results(dataset_geid, created_time, updated_time, validate_output)
-                """.format(
-                    table_name
-                )
-                + """
-                VALUES (%s, %s, %s, %s);
-                """,
-                [dataset_id, current_time, current_time, json.dumps(bids_output)],
-            )
-        else:
-            cur.execute(
-                """
-                UPDATE {}.bids_results
-                """.format(
-                    table_name
-                )
-                + """
-                SET validate_output = %s, updated_time = %s
-                WHERE dataset_geid = %s
-                ;
-                """,
-                [json.dumps(bids_output), current_time, dataset_id],
-            )
+        # Insert the bids output if the database does not store any result before
+        # Otherwise update the bids output and updated time
+        insert_bids = insert(DatasetModel).values(
+            dataset_geid=dataset_id,
+            created_time=current_time,
+            updated_time=current_time,
+            validate_output=json.dumps(bids_output),
+        )
 
-        conn.commit()
-        conn.close()
+        do_update_bids = insert_bids.on_conflict_do_update(
+            constraint='dataset_geid',
+            set_={DatasetModel.updated_time: current_time, DatasetModel.validate_output: json.dumps(bids_output)},
+            where=(DatasetModel.dataset_geid == dataset_id),
+        )
+        db_session.execute(do_update_bids)
+        db_session.commit()
 
         send_message(dataset_id, 'success', bids_output)
 
