@@ -104,7 +104,10 @@ class Node(dict):
 
     @property
     def display_path(self) -> Path:
-        full_path = '{}/{}'.format(self['parent_path'].replace('.', '/'), self['name'])
+        if self['parent_path']:
+            full_path = '{}/{}'.format(self['parent_path'].replace('.', '/'), self['name'])
+        else:
+            full_path = self['name']
         display_path = Path(full_path)
 
         if display_path.is_absolute():

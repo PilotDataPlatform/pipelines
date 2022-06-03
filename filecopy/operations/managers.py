@@ -29,7 +29,6 @@ from operations.services.cataloguing.client import CataloguingServiceClient
 from operations.services.dataops_utility.client import DataopsUtilityClient
 from operations.services.metadata.client import MetadataServiceClient
 from operations.services.provenance.client import ProvenanceServiceClient
-from sqlalchemy import false
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class NodeManager:
     def get_tree(self, source_folder: Node) -> NodeList:
         """Return child nodes from current source folder."""
 
-        nodes = self.metadata_service_client.get_nodes_tree(source_folder.id, false)
+        nodes = self.metadata_service_client.get_nodes_tree(source_folder.id, False)
         return nodes
 
     def exclude_nodes(self, source_folder: Node, nodes: NodeList) -> Set[str]:
@@ -104,7 +103,6 @@ class BaseCopyManager(NodeManager):
 
     def exclude_nodes(self, source_folder: Node, nodes: NodeList) -> Set[str]:
         """Return set of geids that should be excluded when copying from this source folder."""
-
         if self.approved_entities is not None:
             excluded_geids = nodes.ids.difference(self.approved_entities.geids)
             return excluded_geids
@@ -114,7 +112,6 @@ class BaseCopyManager(NodeManager):
 
         if not self.include_ids.issubset(nodes.ids):
             return set()
-
         excluded_geids = nodes.ids.difference(self.include_ids)
 
         return excluded_geids
@@ -284,7 +281,6 @@ class CopyPreparationManager(BaseCopyManager):
     def process_file(self, source_file: Node, destination_path: Path) -> None:
         if not self._is_node_approved(source_file):
             return
-
         logger.info(f'Processing source file "{source_file}" against destination path "{destination_path}".')
 
         source_filepath = self.source_bucket / source_file.display_path
@@ -293,7 +289,6 @@ class CopyPreparationManager(BaseCopyManager):
         if self.metadata_service_client.is_file_exists(self.destination_zone, self.project_code, destination_filepath):
             source_file['name'] = self.duplicated_files.add(source_file.display_path)
             destination_filepath = self.destination_bucket / destination_path / source_file.name
-
         self.read_lock_paths.append(source_filepath)
         self.write_lock_paths.append(destination_filepath)
 

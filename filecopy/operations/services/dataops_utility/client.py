@@ -122,7 +122,7 @@ class DataopsUtilityClient:
         response = self.client.get(
             f'{self.endpoint_v1}/archive',
             params={
-                'file_geid': file_geid,
+                'file_id': file_geid,
             },
         )
         if response.status_code == 404:
