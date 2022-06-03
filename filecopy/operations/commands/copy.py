@@ -61,7 +61,7 @@ def copy(
 
     click.echo(
         f'Starting copy process from "{source_id}" into "{destination_id}" \
-        including only "{include_ids}".'
+        including only "{set(include_ids)}".'
     )
 
     settings = get_settings()
@@ -116,7 +116,7 @@ def copy(
             settings.CORE_ZONE_LABEL,
             source_bucket,
             destination_bucket,
-            include_ids,
+            set(include_ids),
         )
         traverser = Traverser(copy_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder.display_path)
@@ -155,7 +155,7 @@ def copy(
                 pipeline_name,
                 pipeline_desc,
                 operation_type,
-                include_ids,
+                set(include_ids),
             )
             traverser = Traverser(copy_manager)
             traverser.traverse_tree(source_folder, destination_folder)

@@ -52,7 +52,7 @@ def delete(
 ):
     """Move files from source geid into trash bin."""
 
-    click.echo(f'Starting delete process from "{source_id} including only "{include_ids}".')
+    click.echo(f'Starting delete process from "{source_id} including only "{set(include_ids)}".')
 
     settings = get_settings()
     project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
@@ -89,7 +89,7 @@ def delete(
             project_code,
             source_zone,
             source_bucket,
-            include_ids,
+            set(include_ids),
         )
         traverser = Traverser(delete_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder)
@@ -122,7 +122,7 @@ def delete(
                 pipeline_name,
                 pipeline_desc,
                 operation_type,
-                include_ids,
+                set(include_ids),
             )
 
             delete_manager.archive_nodes()

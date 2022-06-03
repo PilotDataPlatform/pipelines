@@ -76,7 +76,7 @@ class MetadataServiceClient:
         return Node(result)
 
     def get_nodes_tree(self, start_folder_id: str, traverse_subtrees: bool = False) -> NodeList:
-        parent_folder_response = self.client.get('{}item/{}'.format(self.endpoint_v1, start_folder_id))
+        parent_folder_response = self.client.get('{}item/{}/'.format(self.endpoint_v1, start_folder_id))
         parent_folder = parent_folder_response.json()['result']
         if parent_folder_response.status_code != 200:
             raise Exception(
@@ -97,7 +97,7 @@ class MetadataServiceClient:
         if response.status_code != 200:
             raise Exception(f'Unable to get nodes tree starting from "{start_folder_id}".')
 
-        nodes = NodeList(response.json()['results'])
+        nodes = NodeList(response.json()['result'])
         return nodes
 
     def get_node(self, zone: str, project_code: str, file_path: Union[Path, str]) -> Optional[Node]:
@@ -108,7 +108,7 @@ class MetadataServiceClient:
             folder_parent = item_list[:-1]
             parent, node_name = '.'.join(folder_parent), item_list[-1]
 
-        item_zone = {'greenroom': 0, 'core': 1}.get(zone)
+        item_zone = {'greenroom': 0, 'core': 1}.get(zone.lower())
         parameters = {
             'archived': False,
             'zone': item_zone,
@@ -211,7 +211,7 @@ class MetadataServiceClient:
             'tags': tags,
             'system_tags': system_tags,
             'attributes': attribute,
-            'attribute_template_id': '',
+            # 'attribute_template_id': '',
         }
 
         # adding the attribute set if exist

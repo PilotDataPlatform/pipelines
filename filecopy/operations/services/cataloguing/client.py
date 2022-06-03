@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+
 from operations.models import Node
 from requests import Session
 
@@ -26,8 +27,9 @@ class CataloguingServiceClient:
         payload.update({'project_code': payload.get('container_code')})
         payload.update({'global_entity_id': payload.id})
         payload.update({'file_name': payload.get('name')})
-        payload.update({'path': payload.get('location')})
+        payload.update({'path': payload['storage']['location_uri']})
         payload.update({'namespace': namespace})
+        payload.update({'file_size': payload.get('size')})
 
         response = self.client.post(f'{self.endpoint_v2}/filedata', json=payload)
 
