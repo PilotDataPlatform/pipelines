@@ -218,7 +218,7 @@ class MetadataServiceClient:
         manifest = source_file['extended']['extra'].get('attributes')
         if manifest:
             payload['attribute_template_id'] = list(manifest.keys())[0]
-            payload['attributes'] = manifest
+            payload['attributes'] = manifest[list(manifest.keys())[0]]
 
         try:
             # minio location is
