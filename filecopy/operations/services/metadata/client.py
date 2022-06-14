@@ -27,7 +27,6 @@ from operations.models import NodeList
 from operations.models import ResourceType
 from operations.models import ZoneType
 from requests import Session
-from sqlalchemy import null
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +274,6 @@ class MetadataServiceClient:
         folder_name = source_folder.get('name')
         if new_name is not None:
             folder_name = new_name
-
         # then copy the node under the dataset
         payload = {
             'parent': parent_node.get('id'),
@@ -284,7 +282,7 @@ class MetadataServiceClient:
             'zone': ZoneType.CORE,
             'name': folder_name,
             # The folder does not have size
-            'size': null,
+            'size': None,
             'owner': source_folder.get('owner'),
             'container_code': project_code,
             'container_type': 'project',
@@ -294,7 +292,6 @@ class MetadataServiceClient:
             'tags': tags,
             'system_tags': system_tags,
         }
-
         folder_node = self.create_node_with_parent(payload)
 
         return folder_node

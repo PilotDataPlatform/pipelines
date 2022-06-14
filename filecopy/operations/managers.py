@@ -235,7 +235,6 @@ class CopyManager(BaseCopyManager):
             f'Processing source folder "{source_folder}" '
             f'against destination parent folder "{destination_parent_folder}".'
         )
-
         destination_folder_path = destination_parent_folder.display_path / source_folder.name
         node = self.metadata_service_client.get_node(self.core_zone_label, self.project_code, destination_folder_path)
 
