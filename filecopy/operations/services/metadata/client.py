@@ -278,7 +278,7 @@ class MetadataServiceClient:
         payload = {
             'parent': parent_node.get('id'),
             'parent_path': self.format_folder_path(parent_node, '.'),
-            'type': 'file',
+            'type': 'folder',
             'zone': ZoneType.CORE,
             'name': folder_name,
             # The folder does not have size
