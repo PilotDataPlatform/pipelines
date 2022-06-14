@@ -89,7 +89,7 @@ def delete(
             project_code,
             source_zone,
             source_bucket,
-            set(include_ids),
+            set(include_ids[0].split(',')),
         )
         traverser = Traverser(delete_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder)
@@ -122,7 +122,7 @@ def delete(
                 pipeline_name,
                 pipeline_desc,
                 operation_type,
-                set(include_ids),
+                set(include_ids[0].split(',')),
             )
 
             delete_manager.archive_nodes()

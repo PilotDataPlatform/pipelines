@@ -116,7 +116,7 @@ def copy(
             settings.CORE_ZONE_LABEL,
             source_bucket,
             destination_bucket,
-            set(include_ids),
+            set(include_ids[0].split(',')),
         )
         traverser = Traverser(copy_preparation_manager)
         traverser.traverse_tree(source_folder, destination_folder.display_path)
@@ -155,7 +155,7 @@ def copy(
                 pipeline_name,
                 pipeline_desc,
                 operation_type,
-                set(include_ids),
+                set(include_ids[0].split(',')),
             )
             traverser = Traverser(copy_manager)
             traverser.traverse_tree(source_folder, destination_folder)
