@@ -26,14 +26,12 @@ class TestNodeManager:
     def test_get_tree_returns_node_list_with_parent_folder_geid(self, node_manager, httpserver, create_node, fake):
         parent_node = create_node(type_=ResourceType.FOLDER, name='folder1', id_='parent_id')
         parent_id = parent_node['id']
-        response = {'result': parent_node}
-        httpserver.expect_request(f'//v1/item/{parent_id}').respond_with_json(response)
+        httpserver.expect_request(f'/v1/item/{parent_id}/').respond_with_json({'result': parent_node})
 
         expected_node = create_node(type_=ResourceType.FOLDER, parent=parent_node['id'])
-        body = {'results': [expected_node]}
+        body = {'result': [expected_node]}
         httpserver.expect_request('/v1/items/search/').respond_with_json(body)
-        parenNode = Node(parent_node)
-        received_nodes = node_manager.get_tree(parenNode)
+        received_nodes = node_manager.get_tree(Node(parent_node))
 
         assert received_nodes == [expected_node]
 
