@@ -21,7 +21,7 @@ from common import ProjectClient
 from operations.config import get_settings
 from operations.managers import CopyManager
 from operations.managers import CopyPreparationManager
-from operations.minio_client import MinioClient
+from operations.minio_boto3_client import MinioBoto3Client
 from operations.services.approval.client import ApprovalServiceClient
 from operations.services.cataloguing.client import CataloguingServiceClient
 from operations.services.dataops_utility.client import DataopsUtilityClient
@@ -43,7 +43,6 @@ from sqlalchemy import create_engine
 @click.option('--project-code', type=str, required=True)
 @click.option('--operator', type=str, required=True)
 @click.option('--access-token', type=str, required=True)
-@click.option('--refresh-token', type=str, required=True)
 @click.option('--request-id', type=click.UUID)
 def copy(
     source_id: str,
@@ -54,7 +53,6 @@ def copy(
     project_code: str,
     operator: str,
     access_token: str,
-    refresh_token: str,
     request_id: Optional[uuid.UUID],
 ):
     """Copy files from source geid into destination geid."""
@@ -75,15 +73,7 @@ def copy(
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
-    minio_client = MinioClient(
-        access_token,
-        refresh_token,
-        settings.MINIO_HOST,
-        settings.MINIO_ENDPOINT,
-        settings.MINIO_HTTPS,
-        settings.KEYCLOAK_MINIO_SECRET,
-        settings.KEYCLOAK_ENDPOINT,
-    )
+    minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
 
     approval_service_client = None
     approved_entities = None
@@ -129,8 +119,6 @@ def copy(
             dataops_utility_client.lock_resources(
                 copy_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
             )
-
-            minio_client.check_connection()
 
             pipeline_name = 'data_transfer_folder'
             pipeline_desc = 'the script will copy the folder \
