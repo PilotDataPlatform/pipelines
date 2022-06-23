@@ -23,7 +23,7 @@ RUN chmod 555 -R /dataset-validate
 COPY poetry.lock pyproject.toml ./
 RUN pip install --no-cache-dir poetry==1.1.12
 RUN poetry config virtualenvs.create true
-RUN poetry install --no-dev --no-root --no-interaction
+RUN poetry install --no-root --no-interaction
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
