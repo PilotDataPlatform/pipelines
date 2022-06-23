@@ -26,13 +26,16 @@ RUN apt-get update \
         curl \
         build-essential
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install --no-cache-dir poetry==1.1.12
+RUN poetry config virtualenvs.create false
 
 WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry install --no-dev --no-root --no-interaction
+RUN poetry install --no-root --no-interaction
+# RUN poetry install --no-dev --no-root --no-interaction
 
 COPY operations ./operations
 
