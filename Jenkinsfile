@@ -24,6 +24,11 @@ pipeline {
               url: "$registryURL",
               credentialsId: 'lzhao'
             }
+          sh """
+          pip3 install pyclean 
+          cd /usr/local/lib/python3.9 
+          sudo pyclean -v .
+          """
         }
     }
 
