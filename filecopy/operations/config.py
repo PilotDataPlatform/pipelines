@@ -81,7 +81,6 @@ class Settings(BaseSettings):
         super().__init__(*args, **kwds)
 
         self.MINIO_HOST = self.MINIO_ENDPOINT
-        self.MINIO_ENDPOINT = ('https' if self.MINIO_HTTPS else 'http') + f'://{self.MINIO_HOST}'
         self.REDIS_URL = f'redis://{self.REDIS_USER}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}'
 
     class Config:

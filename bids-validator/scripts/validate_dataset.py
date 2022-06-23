@@ -11,6 +11,7 @@
 # If not, see http://www.gnu.org/licenses/.
 
 import argparse
+import asyncio
 import json
 import os
 import shutil
@@ -20,27 +21,17 @@ import traceback
 from datetime import datetime
 
 import requests
+from common import LoggerFactory
+from common.object_storage_adaptor.boto3_client import get_boto3_client
 from config import ConfigClass
 from database_service import DatasetModel
 from database_service import DBConnection
 from locks import lock_nodes
 from locks import unlock_resource
-from minio_client import Minio_Client_
 from sqlalchemy.dialects.postgresql import insert
 
 TEMP_FOLDER = './dataset/'
-
-
-def debug_message_sender(message: str):
-    url = ConfigClass.DATA_OPS_UT + 'files/actions/message'
-    response = requests.post(url, json={'message': message, 'channel': 'pipelinewatch'})
-    if response.status_code != 200:
-        logger_info('code: ' + str(response.status_code) + ': ' + response.text)
-    return
-
-
-def logger_info(message: str):
-    debug_message_sender(message)
+logger_info = LoggerFactory('bids-validator').get_logger()
 
 
 def parse_inputs() -> dict:
@@ -51,7 +42,7 @@ def parse_inputs() -> dict:
 
     parser.add_argument('-d', '--dataset-id', help='Dataset id', required=True)
     parser.add_argument('-env', '--environment', help='Environment', required=True)
-    parser.add_argument('-refresh', '--refresh-token', help='Refresh Token', required=True)
+    # parser.add_argument('-refresh', '--refresh-token', help='Refresh Token', required=True)
     parser.add_argument('-access', '--access-token', help='Access Token', required=True)
 
     arguments = vars(parser.parse_args())
@@ -92,11 +83,11 @@ def send_message(dataset_id, status, bids_output) -> None:
     try:
         queue_res = requests.post(queue_url, json=post_json)
         if queue_res.status_code != 200:
-            logger_info('code: ' + str(queue_res.status_code) + ': ' + queue_res.text)
-        logger_info('sent message to queue')
+            logger_info.info('code: ' + str(queue_res.status_code) + ': ' + queue_res.text)
+        logger_info.info('sent message to queue')
         return
     except Exception as e:
-        logger_info(f'Failed to send message to queue: {str(e)}')
+        logger_info.error(f'Failed to send message to queue: {str(e)}')
         raise
 
 
@@ -118,24 +109,22 @@ def get_files(dataset_code) -> list:
                 all_files.append(node['storage']['location_uri'])
         return all_files
     except Exception as e:
-        logger_info(f'Error when get files: {str(e)}')
+        logger_info.error(f'Error when get files: {str(e)}')
         raise
 
 
-def download_from_minio(files_locations, auth_token) -> None:
-    mc = Minio_Client_(auth_token['at'], auth_token['rt'])
-    logger_info('========Minio_Client Initiated========')
-
+async def download_from_minio(files_locations, auth_token) -> None:
+    boto3_client = await get_boto3_client(ConfigClass.MINIO_ENDPOINT, token=auth_token, https=ConfigClass.MINIO_HTTPS)
     try:
         for file_location in files_locations:
             minio_path = file_location.split('//')[-1]
             _, bucket, obj_path = tuple(minio_path.split('/', 2))
+            await boto3_client.downlaod_object(bucket, obj_path, TEMP_FOLDER + obj_path)
 
-            mc.client.fget_object(bucket, obj_path, TEMP_FOLDER + obj_path)
-        logger_info('========Minio_Client download finished========')
+        logger_info.info('========Minio_Client download finished========')
 
     except Exception as e:
-        logger_info(f'Error when download data from minio: {str(e)}')
+        logger_info.error(f'Error when download data from minio: {str(e)}')
         raise
 
 
@@ -144,7 +133,7 @@ def getProcessOutput() -> None:
     try:
         subprocess.run(['bids-validator', TEMP_FOLDER + 'data', '--json'], universal_newlines=True, stdout=f)
     except Exception as e:
-        logger_info(f'BIDS validate fail: {str(e)}')
+        logger_info.error(f'BIDS validate fail: {str(e)}')
         raise
 
 
@@ -155,10 +144,10 @@ def read_result_file() -> str:
 
 
 def main():
-    logger_info('Vault url: ' + os.getenv('VAULT_URL'))
+    logger_info.info('Vault url: ' + os.getenv('VAULT_URL'))
     environment = args.get('environment', 'test')
-    logger_info('environment: ' + str(args.get('environment')))
-    logger_info('config set: ' + environment)
+    logger_info.info('environment: ' + str(args.get('environment')))
+    logger_info.info('config set: ' + environment)
     try:
         # connect to the postgres database
         db = DBConnection()
@@ -166,18 +155,12 @@ def main():
 
         # get arguments
         dataset_id = args['dataset_id']
-        refresh_token = args['refresh_token']
         access_token = args['access_token']
         dataset_code = get_dataset_code(dataset_id)
 
-        logger_info(
-            'dataset_geid: {}, access_token: {}, \
-            refresh_token: {}'.format(
-                dataset_id, access_token, refresh_token
-            )
-        )
+        logger_info.info(f'dataset_geid: {dataset_id}, access_token: {access_token}')
 
-        auth_token = {'at': access_token, 'rt': refresh_token}
+        auth_token = {'at': access_token}
 
         locked_node = []
         files_locations = get_files(dataset_code)
@@ -189,13 +172,17 @@ def main():
         if len(files_locations) == 0:
             send_message(dataset_id, 'failed', 'no files in dataset')
             return
-        download_from_minio(files_locations, auth_token)
-        logger_info('files are downloaded from minio')
 
+        # Download files folders from minio
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(download_from_minio(files_locations, auth_token['at']))
+        logger_info.info('files are downloaded from minio')
+
+        # Get bids validate result
         getProcessOutput()
         result = read_result_file()
 
-        logger_info('BIDS validation result: {}'.format(result))
+        logger_info.info(f'BIDS validation result: {result}')
 
         bids_output = json.loads(result)
 
@@ -204,7 +191,7 @@ def main():
 
         current_time = datetime.utcfromtimestamp(time.time())
 
-        logger_info(f'Validation time: {current_time}')
+        logger_info.info(f'Validation time: {current_time}')
 
         # Insert the bids output if the database does not store any result before
         # Otherwise update the bids output and updated time
@@ -226,7 +213,7 @@ def main():
         send_message(dataset_id, 'success', bids_output)
 
     except Exception as e:
-        logger_info(f'BIDs validator failed due to: {str(e)}')
+        logger_info.error(f'BIDs validator failed due to: {str(e)}')
         send_message(dataset_id, 'failed', str(e))
         raise
 
@@ -240,7 +227,7 @@ if __name__ == '__main__':
         args = parse_inputs()
         main()
     except Exception as e:
-        logger_info('[Validate Failed] {}'.format(str(e)))
+        logger_info.error(f'[Validate Failed] {str(e)}')
         for info in traceback.format_stack():
-            logger_info(info)
+            logger_info.error(info)
         raise

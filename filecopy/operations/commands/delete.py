@@ -20,7 +20,7 @@ from common import ProjectClient
 from operations.config import get_settings
 from operations.managers import DeleteManager
 from operations.managers import DeletePreparationManager
-from operations.minio_client import MinioClient
+from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import ZoneType
 from operations.services.cataloguing.client import CataloguingServiceClient
 from operations.services.dataops_utility.client import DataopsUtilityClient
@@ -39,7 +39,6 @@ from operations.traverser import Traverser
 @click.option('--project-code', type=str, required=True)
 @click.option('--operator', type=str, required=True)
 @click.option('--access-token', type=str, required=True)
-@click.option('--refresh-token', type=str, required=True)
 def delete(
     source_id: str,
     include_ids: Optional[List[str]],
@@ -48,7 +47,6 @@ def delete(
     project_code: str,
     operator: str,
     access_token: str,
-    refresh_token: str,
 ):
     """Move files from source geid into trash bin."""
 
@@ -64,15 +62,7 @@ def delete(
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
-    minio_client = MinioClient(
-        access_token,
-        refresh_token,
-        settings.MINIO_HOST,
-        settings.MINIO_ENDPOINT,
-        settings.MINIO_HTTPS,
-        settings.KEYCLOAK_MINIO_SECRET,
-        settings.KEYCLOAK_ENDPOINT,
-    )
+    minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
 
     try:
         source_folder = metadata_service_client.get_item_by_id(source_id)
@@ -101,8 +91,6 @@ def delete(
             dataops_utility_client.lock_resources(
                 delete_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
             )
-
-            minio_client.check_connection()
 
             pipeline_name = 'data_delete_folder'
             pipeline_desc = 'the script will delete the folder in \

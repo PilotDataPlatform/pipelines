@@ -36,22 +36,10 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Settings(BaseSettings):
-    port: int = 5081
-    host: str = '127.0.0.1'
-    env: str = ''
-    version: str = '0.2.0'
-    namespace: str = ''
-
-    MINIO_OPENID_CLIENT: str = ''
     MINIO_ENDPOINT: str = ''
     MINIO_HTTPS: str = ''
-    KEYCLOAK_MINIO_SECRET: str
-    KEYCLOAK_ENDPOINT: str
 
-    # temp path
-    DATA_OPS_UT: str = ''
     DATA_OPS_UT_V2: str = ''
-
     DATASET_SERVICE: str = ''
     QUEUE_SERVICE: str = ''
 
@@ -67,7 +55,6 @@ class Settings(BaseSettings):
     def __init__(self):
         super().__init__()
         self.MINIO_HTTPS = self.MINIO_HTTPS == 'True'
-        self.DATA_OPS_UT = self.DATA_OPS_UTIL + '/v1/'
         self.DATA_OPS_UT_V2 = self.DATA_OPS_UTIL + '/v2/'
         self.DATASET_SERVICE += '/v1'
         self.QUEUE_SERVICE += '/v1/'

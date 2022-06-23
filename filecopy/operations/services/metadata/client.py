@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 import logging
 import time
 from pathlib import Path
@@ -21,7 +22,7 @@ from typing import Tuple
 from typing import Union
 
 from common import ProjectException
-from operations.minio_client import MinioClient
+from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import Node
 from operations.models import NodeList
 from operations.models import ResourceType
@@ -120,7 +121,7 @@ class MetadataServiceClient:
         response = self.client.get(node_query_url, params=parameters)
         node = response.json()['result']
         if node:
-            return Node(node)
+            return Node(node[0])
         return None
 
     def is_file_exists(self, zone: str, project_code: str, path: Union[Path, str]) -> bool:
@@ -175,7 +176,7 @@ class MetadataServiceClient:
         source_file: Node,
         parent_node: Node,
         folder_display_path: Path,
-        minio_client: MinioClient,
+        minio_client: MinioBoto3Client,
         tags: Optional[List] = None,
         attribute: Optional[dict] = None,
         new_name: Optional[str] = None,
@@ -230,22 +231,28 @@ class MetadataServiceClient:
             # here the minio api only accept the 5GB in copy.
             # if >5GB we need to download
             # to local then reupload to target
-            file_size_gb = minio_client.client.stat_object(src_bucket, src_obj_path).size
+            file_size_gb = payload['size']
+            loop = asyncio.get_event_loop()
             if file_size_gb < 5e9:
                 logger.info('File size less than 5GiB')
                 logger.info(
                     f'Copying object from "{src_bucket}/{src_obj_path}" to \
                         "{target_bucket}/{target_obj_path}".'
                 )
-                result = minio_client.copy_object(target_bucket, target_obj_path, src_bucket, src_obj_path)
-                version_id = result.version_id
+                result = loop.run_until_complete(
+                    minio_client.copy_object(target_bucket, target_obj_path, src_bucket, src_obj_path)
+                )
+                version_id = result['VersionId']
             else:
                 logger.info('File size greater than 5GiB')
                 temp_path = self.temp_dir + str(time.time())
-                minio_client.client.fget_object(src_bucket, src_obj_path, temp_path)
+                loop.run_until_complete(minio_client.download_object(src_bucket, src_obj_path, temp_path))
                 logger.info(f'File fetched to local disk: {temp_path}')
-                result = minio_client.fput_object(target_bucket, target_obj_path, temp_path)
-                version_id = result.version_id
+                temp_file_path = f"{temp_path}/{payload['name']}"
+                result = loop.run_until_complete(
+                    minio_client.upload_object(target_bucket, target_obj_path, temp_file_path)
+                )
+                version_id = result['VersionId']
 
             logger.info(f'Minio Copy {src_bucket}/{src_obj_path} Success')
             payload['version'] = version_id
@@ -307,7 +314,8 @@ class MetadataServiceClient:
                     src_minio_path = item['storage'].get('location_uri').split('//')[-1]
                     _, src_bucket, src_obj_path = tuple(src_minio_path.split('/', 2))
 
-                    minio_client.client.remove_object(src_bucket, src_obj_path)
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(minio_client.remove_object(src_bucket, src_obj_path))
                     logger.info(
                         f'Minio Delete \
                         {src_bucket}/{src_obj_path} Success'

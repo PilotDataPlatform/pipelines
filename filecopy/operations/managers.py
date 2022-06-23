@@ -18,7 +18,7 @@ from typing import Set
 from typing import Union
 
 from operations.duplicated_file_names import DuplicatedFileNames
-from operations.minio_client import MinioClient
+from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import Node
 from operations.models import NodeList
 from operations.models import get_timestamp
@@ -41,7 +41,6 @@ class NodeManager:
 
     def get_tree(self, source_folder: Node) -> NodeList:
         """Return child nodes from current source folder."""
-
         nodes = self.metadata_service_client.get_nodes_tree(source_folder.id, False)
         return nodes
 
@@ -142,7 +141,7 @@ class CopyManager(BaseCopyManager):
         system_tags: List[str],
         project: Node,
         operator: str,
-        minio_client: MinioClient,
+        minio_client: MinioBoto3Client,
         core_zone_label: str,
         green_zone_label: str,
         pipeline_name: str,
@@ -211,7 +210,6 @@ class CopyManager(BaseCopyManager):
             return
 
         logger.info(f'Processing source file "{source_file}" against destination folder "{destination_folder}".')
-
         destination_filename = self.duplicated_files.get(source_file.display_path, source_file.name)
 
         node, version_id = self.metadata_service_client.create_file_node(
@@ -237,7 +235,6 @@ class CopyManager(BaseCopyManager):
         )
         destination_folder_path = destination_parent_folder.display_path / source_folder.name
         node = self.metadata_service_client.get_node(self.core_zone_label, self.project_code, destination_folder_path)
-
         if not node:
             node = self.metadata_service_client.create_folder_node(
                 self.project_code,
@@ -284,8 +281,8 @@ class CopyPreparationManager(BaseCopyManager):
 
         source_filepath = self.source_bucket / source_file.display_path
         destination_filepath = self.destination_bucket / destination_path / source_file.name
-
-        if self.metadata_service_client.is_file_exists(self.destination_zone, self.project_code, destination_filepath):
+        destination_path = destination_path / source_file.name
+        if self.metadata_service_client.is_file_exists(self.destination_zone, self.project_code, destination_path):
             source_file['name'] = self.duplicated_files.add(source_file.display_path)
             destination_filepath = self.destination_bucket / destination_path / source_file.name
         self.read_lock_paths.append(source_filepath)
@@ -317,7 +314,7 @@ class DeleteManager(NodeManager):
         dataops_utility_client: DataopsUtilityClient,
         project: Node,
         operator: str,
-        minio_client: MinioClient,
+        minio_client: MinioBoto3Client,
         core_zone_label: str,
         green_zone_label: str,
         pipeline_name: str,
