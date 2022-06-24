@@ -199,12 +199,12 @@ def main():
             dataset_geid=dataset_id,
             created_time=current_time,
             updated_time=current_time,
-            validate_output=json.dumps(bids_output),
+            validate_output=bids_output,
         )
 
         do_update_bids = insert_bids.on_conflict_do_update(
             constraint='dataset_geid',
-            set_={DatasetModel.updated_time: current_time, DatasetModel.validate_output: json.dumps(bids_output)},
+            set_={DatasetModel.updated_time: current_time, DatasetModel.validate_output: bids_output},
             where=(DatasetModel.dataset_geid == dataset_id),
         )
         db_session.execute(do_update_bids)
