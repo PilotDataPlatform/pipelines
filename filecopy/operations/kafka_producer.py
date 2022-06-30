@@ -10,7 +10,6 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
-import asyncio
 import io
 from datetime import datetime
 from typing import Optional
@@ -18,19 +17,16 @@ from typing import Optional
 from aiokafka import AIOKafkaProducer
 from fastavro import schema
 from fastavro import schemaless_writer
-from models import Node
+from operations.models import Node
 
 
 class KafkaProducer:
     def __init__(self, endpoint: str) -> None:
         self.endpoint = endpoint
         self.topic = 'items-activity-logs'
-        self.schema = 'item_activity_schema.avsc'
+        self.schema = 'operations/item_activity_schema.avsc'
 
-    def connect_to_kafka(self):
-        self.producer = AIOKafkaProducer(bootstrap_servers=self.endpoint)
-
-    def create_file_operation_logs(
+    async def create_file_operation_logs(
         self, input_file: Node, operation_type: str, operator: str, output_file: Optional[Node]
     ):
 
@@ -51,9 +47,12 @@ class KafkaProducer:
 
         if operation_type == 'copy':
             message['changes'] = [
-                {'item_property': 'path', 'old_value': input_file.display_path, 'new_value': output_file.display_path}
+                {
+                    'item_property': 'path',
+                    'old_value': str(input_file.display_path),
+                    'new_value': str(output_file.display_path),
+                }
             ]
-        loop = asyncio.get_event_loop()
         try:
             # Validate message
             bio = io.BytesIO()
@@ -63,10 +62,11 @@ class KafkaProducer:
             validated_message = bio.getvalue()
 
             # Send message to kafka
-            loop.run_until_complete(self.producer.start())
-            loop.run_until_complete(self.producer.send_and_wait(self.topic, validated_message))
+            producer = AIOKafkaProducer(bootstrap_servers=self.endpoint)
+            await producer.start()
+            await producer.send_and_wait(self.topic, validated_message)
         except Exception as e:
             raise Exception(f'Error when validate and send message to kafka producer: {e}')
 
         finally:
-            loop.run_until_complete(self.producer.stop())
+            await producer.stop()

@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import List
@@ -185,7 +186,10 @@ class CopyManager(BaseCopyManager):
             self.pipeline_desc,
         )
 
-        self.kafka_client.create_file_operation_logs(source_node, self.operation_type, self.operator, target_node)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.kafka_client.create_file_operation_logs(source_node, self.operation_type, self.operator, target_node)
+        )
 
         update_json = {
             'system_tags': self.system_tags,

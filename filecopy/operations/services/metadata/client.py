@@ -325,7 +325,9 @@ class MetadataServiceClient:
                         {src_bucket}/{src_obj_path} Success'
                     )
                     # Add activity log
-                    kafka_client.create_file_operation_logs(Node(item), operation_type, operator, None)
+                    loop.run_until_complete(
+                        kafka_client.create_file_operation_logs(Node(item), operation_type, operator, None)
+                    )
         except Exception:
             logger.exception('Error when removing file.')
             raise
