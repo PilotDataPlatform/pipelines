@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str
     REDIS_HOST: str
     REDIS_PORT: str
+    KAFKA_URL: str
 
     def __init__(self, *args: Any, **kwds: Any) -> None:
         super().__init__(*args, **kwds)

@@ -19,6 +19,7 @@ from typing import Set
 import click
 from common import ProjectClient
 from operations.config import get_settings
+from operations.kafka_producer import KafkaProducer
 from operations.managers import CopyManager
 from operations.managers import CopyPreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
@@ -74,6 +75,7 @@ def copy(
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
     minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
+    kafka_client = KafkaProducer(settings.KAFKA_URL)
 
     approval_service_client = None
     approved_entities = None
@@ -123,7 +125,7 @@ def copy(
             pipeline_name = 'data_transfer_folder'
             pipeline_desc = 'the script will copy the folder \
                 from greenroom to core recursively'
-            operation_type = 'data_transfer'
+            operation_type = 'copy'
 
             system_tags = [settings.COPIED_WITH_APPROVAL_TAG]
             copy_manager = CopyManager(
@@ -144,6 +146,7 @@ def copy(
                 pipeline_desc,
                 operation_type,
                 set(include_ids[0].split(',')),
+                kafka_client,
             )
             traverser = Traverser(copy_manager)
             traverser.traverse_tree(source_folder, destination_folder)
