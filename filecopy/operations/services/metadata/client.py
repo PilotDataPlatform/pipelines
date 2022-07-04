@@ -28,6 +28,7 @@ from operations.models import NodeList
 from operations.models import ResourceType
 from operations.models import ZoneType
 from requests import Session
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +243,7 @@ class MetadataServiceClient:
                 result = loop.run_until_complete(
                     minio_client.copy_object(target_bucket, target_obj_path, src_bucket, src_obj_path)
                 )
-                version_id = result['VersionId']
+                version_id = result.get('VersionId', str(UUID(int=0))) # 0-UUID in case versioning is unsupported
             else:
                 logger.info('File size greater than 5GiB')
                 temp_path = self.temp_dir + str(time.time())
@@ -252,7 +253,7 @@ class MetadataServiceClient:
                 result = loop.run_until_complete(
                     minio_client.upload_object(target_bucket, target_obj_path, temp_file_path)
                 )
-                version_id = result['VersionId']
+                version_id = result.get('VersionId', str(UUID(int=0))) # 0-UUID in case versioning is unsupported
 
             logger.info(f'Minio Copy {src_bucket}/{src_obj_path} Success')
             payload['version'] = version_id
