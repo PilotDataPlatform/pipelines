@@ -31,7 +31,7 @@ class KafkaProducer:
     ):
         message = {
             'activity_type': operation_type,
-            'activity_time': datetime.now(),
+            'activity_time': datetime.utcnow(),
             'item_id': input_file.id,
             'item_type': input_file.get('type'),
             'item_name': input_file.name,
