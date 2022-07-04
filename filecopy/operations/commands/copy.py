@@ -75,7 +75,10 @@ def copy(
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
     minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
+
     kafka_client = KafkaProducer(settings.KAFKA_URL)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(kafka_client.init_connection())
 
     approval_service_client = None
     approved_entities = None

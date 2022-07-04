@@ -21,10 +21,13 @@ from operations.models import Node
 
 
 class KafkaProducer:
-    def __init__(self, endpoint: str) -> None:
+    def __init__(self, endpoint) -> None:
         self.endpoint = endpoint
         self.topic = 'items-activity-logs'
         self.schema = 'operations/item_activity_schema.avsc'
+
+    async def init_connection(self):
+        self.producer = AIOKafkaProducer(bootstrap_servers=self.endpoint)
 
     async def create_file_operation_logs(
         self, input_file: Node, operation_type: str, operator: str, output_file: Optional[Node]
@@ -61,11 +64,10 @@ class KafkaProducer:
             validated_message = bio.getvalue()
 
             # Send message to kafka
-            producer = AIOKafkaProducer(bootstrap_servers=self.endpoint)
-            await producer.start()
-            await producer.send_and_wait(self.topic, validated_message)
+            await self.producer.start()
+            await self.producer.send_and_wait(self.topic, validated_message)
         except Exception as e:
             raise Exception(f'Error when validate and send message to kafka producer: {e}')
 
         finally:
-            await producer.stop()
+            await self.producer.stop()

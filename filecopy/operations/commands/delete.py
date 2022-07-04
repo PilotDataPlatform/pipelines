@@ -64,7 +64,10 @@ def delete(
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
     minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
+
     kafka_client = KafkaProducer(settings.KAFKA_URL)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(kafka_client.init_connection())
 
     try:
         source_folder = metadata_service_client.get_item_by_id(source_id)
