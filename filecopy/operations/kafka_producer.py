@@ -29,14 +29,13 @@ class KafkaProducer:
     async def create_file_operation_logs(
         self, input_file: Node, operation_type: str, operator: str, output_file: Optional[Node]
     ):
-
         message = {
             'activity_type': operation_type,
             'activity_time': datetime.now(),
             'item_id': input_file.id,
             'item_type': input_file.get('type'),
             'item_name': input_file.name,
-            'item_parent_path': input_file.parent_path,
+            'item_parent_path': ('' if input_file.parent_path is None else input_file.parent_path),
             'container_code': input_file.get('container_code'),
             'container_type': input_file.get('container_type'),
             'zone': input_file.get('zone'),
