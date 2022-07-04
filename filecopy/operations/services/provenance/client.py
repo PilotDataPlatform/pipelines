@@ -10,7 +10,6 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
-import os
 from typing import Any
 from typing import Dict
 
@@ -49,53 +48,5 @@ class ProvenanceServiceClient:
         response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload)
         if response.status_code != 200:
             raise Exception(f'Unable to create lineage between "{input_id} and "{output_id}" in atlas.')
-
-        return response.json()
-
-    def update_file_operation_logs(
-        self, input_file_path: str, output_file_path: str, operation_type: str, operator: str, project_code: str
-    ) -> Dict[str, Any]:
-        """Create the file or folder stream/operational activity log in the Elasticsearch."""
-
-        payload = {
-            'action': operation_type,
-            'operator': operator,
-            'target': input_file_path,
-            'outcome': output_file_path,
-            'resource': 'file',
-            'display_name': os.path.basename(input_file_path),
-            'project_code': project_code,
-            'extra': {},
-        }
-        response = self.client.post(f'{self.endpoint_v1}/audit-logs', json=payload)
-        if response.status_code != 200:
-            raise Exception(
-                'Unable to create activity log in the Elasticsearch for'
-                f'"{input_file_path}" and "{output_file_path}".'
-            )
-
-        return response.json()
-
-    def deprecate_index_in_es(self, _id: str) -> Dict[str, Any]:
-        """Deprecate the file or folder search index in Elasticsearch."""
-
-        payload = {
-            'global_entity_id': _id,
-            'updated_fields': {
-                'archived': True,
-            },
-        }
-        response = self.client.put(f'{self.endpoint_v1}/entity/file', json=payload)
-        if response.status_code != 200:
-            raise Exception(f'Unable to deprecate search index in the Elasticsearch for "{_id}".')
-
-        return response.json()
-
-    def create_index_in_es(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Create the file or folder search index in Elasticsearch."""
-
-        response = self.client.post(f'{self.endpoint_v1}/entity/file', json=payload)
-        if response.status_code != 200:
-            raise Exception(f'Unable to create search index in the Elasticsearch for "{payload}".')
 
         return response.json()
