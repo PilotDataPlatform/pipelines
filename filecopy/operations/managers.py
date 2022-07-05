@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import List
@@ -18,6 +19,7 @@ from typing import Set
 from typing import Union
 
 from operations.duplicated_file_names import DuplicatedFileNames
+from operations.kafka_producer import KafkaProducer
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import Node
 from operations.models import NodeList
@@ -148,6 +150,7 @@ class CopyManager(BaseCopyManager):
         pipeline_desc: str,
         operation_type: str,
         include_geids: Optional[Set[str]],
+        kafka_client: KafkaProducer,
     ) -> None:
         super().__init__(metadata_service_client, approval_service_client, approved_entities, include_geids)
 
@@ -165,6 +168,7 @@ class CopyManager(BaseCopyManager):
         self.pipeline_name = pipeline_name
         self.pipeline_desc = pipeline_desc
         self.operation_type = operation_type
+        self.kafka_client = kafka_client
 
     def _create_file_metadata(self, source_node: Node, target_node: Node, new_node_version_id: str) -> None:
         self._copy_zip_preview_info(source_node.id, target_node.id)
@@ -182,12 +186,9 @@ class CopyManager(BaseCopyManager):
             self.pipeline_desc,
         )
 
-        self.provenance_service_client.update_file_operation_logs(
-            str(Path(self.green_zone_label) / source_node.display_path),
-            str(Path(self.core_zone_label) / target_node.display_path),
-            self.operation_type,
-            self.operator,
-            self.project_code,
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.kafka_client.create_file_operation_logs(source_node, self.operation_type, self.operator, target_node)
         )
 
         update_json = {
@@ -321,6 +322,7 @@ class DeleteManager(NodeManager):
         pipeline_desc: str,
         operation_type: str,
         include_geids: Optional[Set[str]],
+        kafka_client: KafkaProducer,
     ) -> None:
         super().__init__(metadata_service_client)
 
@@ -338,6 +340,7 @@ class DeleteManager(NodeManager):
         self.pipeline_desc = pipeline_desc
         self.operation_type = operation_type
         self.include_geids = include_geids
+        self.kafka_client = kafka_client
 
     def exclude_nodes(self, source_folder: Node, nodes: NodeList) -> Set[str]:
         if self.include_geids is None:
@@ -363,7 +366,9 @@ class DeleteManager(NodeManager):
         for node_id in self.include_geids:
             logger.info(f'Move the node "{node_id}" into trashbin recursively')
             node = self.metadata_service_client.get_item_by_id(node_id)
-            self.metadata_service_client.archived_node(node, self.minio_client)
+            self.metadata_service_client.archived_node(
+                node, self.minio_client, self.kafka_client, self.operation_type, self.operator
+            )
 
 
 class DeletePreparationManager(NodeManager):

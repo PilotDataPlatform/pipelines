@@ -22,6 +22,7 @@ from typing import Tuple
 from typing import Union
 
 from common import ProjectException
+from operations.kafka_producer import KafkaProducer
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import Node
 from operations.models import NodeList
@@ -303,7 +304,9 @@ class MetadataServiceClient:
 
         return folder_node
 
-    def archived_node(self, source_file: Node, minio_client) -> Node:
+    def archived_node(
+        self, source_file: Node, minio_client: MinioBoto3Client, kafka_client: KafkaProducer, operation_type, operator
+    ) -> Node:
         trash_node = self.move_node_to_trash(source_file.id)
 
         try:
@@ -311,6 +314,7 @@ class MetadataServiceClient:
             # minio://http://<end_point>/bucket/user/object_path
             for item in trash_node:
                 if item['type'] == ResourceType.FILE:
+                    # Remove from minio
                     src_minio_path = item['storage'].get('location_uri').split('//')[-1]
                     _, src_bucket, src_obj_path = tuple(src_minio_path.split('/', 2))
 
@@ -319,6 +323,10 @@ class MetadataServiceClient:
                     logger.info(
                         f'Minio Delete \
                         {src_bucket}/{src_obj_path} Success'
+                    )
+                    # Add activity log
+                    loop.run_until_complete(
+                        kafka_client.create_file_operation_logs(Node(item), operation_type, operator, None)
                     )
         except Exception:
             logger.exception('Error when removing file.')

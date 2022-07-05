@@ -18,6 +18,7 @@ from typing import Optional
 import click
 from common import ProjectClient
 from operations.config import get_settings
+from operations.kafka_producer import KafkaProducer
 from operations.managers import DeleteManager
 from operations.managers import DeletePreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
@@ -64,6 +65,10 @@ def delete(
 
     minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
 
+    kafka_client = KafkaProducer(settings.KAFKA_URL)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(kafka_client.init_connection())
+
     try:
         source_folder = metadata_service_client.get_item_by_id(source_id)
         destination_folder = Path()
@@ -95,7 +100,7 @@ def delete(
             pipeline_name = 'data_delete_folder'
             pipeline_desc = 'the script will delete the folder in \
                 greenroom/core recursively'
-            operation_type = 'data_delete'
+            operation_type = 'delete'
 
             delete_manager = DeleteManager(
                 metadata_service_client,
@@ -111,6 +116,7 @@ def delete(
                 pipeline_desc,
                 operation_type,
                 set(include_ids[0].split(',')),
+                kafka_client,
             )
 
             delete_manager.archive_nodes()
