@@ -23,7 +23,7 @@ from operations.models import Node
 class KafkaProducer:
     def __init__(self, endpoint) -> None:
         self.endpoint = endpoint
-        self.topic = 'items-activity-logs'
+        self.topic = 'metadata.items.activity'
         self.schema = 'operations/item_activity_schema.avsc'
 
     async def init_connection(self):
