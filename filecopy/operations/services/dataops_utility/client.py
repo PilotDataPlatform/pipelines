@@ -138,11 +138,11 @@ class DataopsUtilityClient:
 
         return response.json()
 
-    def create_zip_preview(self, file_geid: str, archive_preview: Dict[str, Any]) -> Dict[str, Any]:
+    def create_zip_preview(self, file_id: str, archive_preview: Dict[str, Any]) -> Dict[str, Any]:
         response = self.client.post(
             f'{self.endpoint_v1}/archive',
             json={
-                'file_geid': file_geid,
+                'file_id': file_id,
                 'archive_preview': archive_preview,
             },
         )
@@ -150,12 +150,12 @@ class DataopsUtilityClient:
         if response.status_code != 200:
             logger.error(
                 'Unexpected status code received while creating zip '
-                f'preview for geid "{file_geid}". '
+                f'preview for geid "{file_id}". '
                 f'Received response: "{response.text}".'
             )
             raise Exception(
                 f'Unable to create zip preview for id \
-                "{file_geid}"'
+                "{file_id}"'
             )
 
         return response.json()
