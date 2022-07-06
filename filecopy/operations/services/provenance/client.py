@@ -10,10 +10,13 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import logging
 from typing import Any
 from typing import Dict
 
 from requests import Session
+
+logger = logging.getLogger(__name__)
 
 
 class ProvenanceServiceClient:
@@ -45,7 +48,8 @@ class ProvenanceServiceClient:
             'pipeline_name': pipeline_name,
             'description': pipeline_description,
         }
-        response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload)
+        response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload, timeout=None)
+        logger.debug(response.json())
         if response.status_code != 200:
             raise Exception(f'Unable to create lineage between "{input_id} and "{output_id}" in atlas.')
 
