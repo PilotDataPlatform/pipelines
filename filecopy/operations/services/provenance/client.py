@@ -48,7 +48,7 @@ class ProvenanceServiceClient:
             'pipeline_name': pipeline_name,
             'description': pipeline_description,
         }
-        response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload, timeout=120)
+        response = self.client.post(f'{self.endpoint_v1}/lineage/', json=payload)
         logger.debug(response.json())
         if response.status_code != 200:
             raise Exception(f'Unable to create lineage between "{input_id} and "{output_id}" in atlas.')
