@@ -11,6 +11,7 @@
 # If not, see http://www.gnu.org/licenses/.
 
 import asyncio
+import atexit
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -34,7 +35,10 @@ from operations.traverser import Traverser
 from sqlalchemy import MetaData
 from sqlalchemy import create_engine
 
+atexit.register(KafkaProducer.close_connection)
 
+
+@atexit.register
 @click.command()
 @click.option('--source-id', type=str, required=True)
 @click.option('--destination-id', type=str, required=True)
@@ -76,9 +80,8 @@ def copy(
 
     minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
 
-    kafka_client = KafkaProducer(settings.KAFKA_URL)
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(kafka_client.init_connection())
+    loop.run_until_complete(KafkaProducer.init_connection())
 
     approval_service_client = None
     approved_entities = None
@@ -149,7 +152,6 @@ def copy(
                 pipeline_desc,
                 operation_type,
                 set(include_ids[0].split(',')),
-                kafka_client,
             )
             traverser = Traverser(copy_manager)
             traverser.traverse_tree(source_folder, destination_folder)

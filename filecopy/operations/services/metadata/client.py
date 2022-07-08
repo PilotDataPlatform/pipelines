@@ -304,9 +304,7 @@ class MetadataServiceClient:
 
         return folder_node
 
-    def archived_node(
-        self, source_file: Node, minio_client: MinioBoto3Client, kafka_client: KafkaProducer, operation_type, operator
-    ) -> Node:
+    def archived_node(self, source_file: Node, minio_client: MinioBoto3Client, operation_type, operator) -> Node:
         trash_node = self.move_node_to_trash(source_file.id)
 
         try:
@@ -326,7 +324,7 @@ class MetadataServiceClient:
                     )
                     # Add activity log
                     loop.run_until_complete(
-                        kafka_client.create_file_operation_logs(Node(item), operation_type, operator, None)
+                        KafkaProducer.create_file_operation_logs(Node(item), operation_type, operator, None)
                     )
         except Exception:
             logger.exception('Error when removing file.')
