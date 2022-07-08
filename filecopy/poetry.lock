@@ -414,7 +414,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "pilot-platform-common"
-version = "0.0.35"
+version = "0.0.39"
 description = "Generates entity ID and connects with Vault (secret engine) to retrieve credentials"
 category = "main"
 optional = false
@@ -426,6 +426,7 @@ aioredis = ">=2.0.0"
 httpx = "0.23.0"
 minio = "7.1.8"
 python-dotenv = "0.19.1"
+python-json-logger = ">=0.1.11"
 xmltodict = "0.13.0"
 
 [[package]]
@@ -763,7 +764,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "105da75b2ad49f5c05d3bd5747ab4c5a03749b71a17800376c016475e2b125a3"
+content-hash = "65a2bed451a34dbf1c804293cffe7527255b5be4a0537575dfc5995c94b69836"
 
 [metadata.files]
 aioboto3 = [
@@ -1214,10 +1215,7 @@ packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
-pilot-platform-common = [
-    {file = "pilot-platform-common-0.0.35.tar.gz", hash = "sha256:f328043b71808676ec2381663b0e426a2a0eeee0f1aa0e1906bb73269d79f6a0"},
-    {file = "pilot_platform_common-0.0.35-py3-none-any.whl", hash = "sha256:ac66657fad46d927f731a4d582a6d1d4dc5586cc4577d923a8cf04bdfec984f0"},
-]
+pilot-platform-common = []
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
