@@ -39,6 +39,7 @@ class MinioBoto3Client:
         await self.client.downlaod_object(src_bucket, src_path, temp_path)
 
     async def copy_object(self, dest_bucket, dest_path, source_bucket, source_path):
+        logger.debug(f'Temp credential is {self.client.temp_credentials}')
         result = await self.client.copy_object(source_bucket, source_path, dest_bucket, dest_path)
         return result
 
