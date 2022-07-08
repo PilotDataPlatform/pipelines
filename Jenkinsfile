@@ -25,8 +25,8 @@ pipeline {
               credentialsId: 'lzhao'
             }
           sh """
-          pip3 install pyclean 
-          cd /usr/local/lib/python3.9 
+          pip3 install pyclean
+          cd /usr/local/lib/python3.9
           pyclean -v .
           """
         }
@@ -44,10 +44,10 @@ pipeline {
           docker.withRegistry("$registryURLBase", registryCredential) {
             customImage = docker.build("$imagename_dcmedit_dev:edge", "./dcmedit")
             customImage.push()
-          }          
+          }
         }
       }
-    }    
+    }
     stage('DEV Remove dcmedit image') {
       when {
           allOf {
@@ -72,7 +72,7 @@ pipeline {
           docker.withRegistry("$registryURLBase", registryCredential) {
             customImage = docker.build("$imagename_filecopy_dev:edge", "--no-cache ./filecopy")
             customImage.push()
-          }         
+          }
         }
       }
     }
@@ -103,7 +103,7 @@ pipeline {
           }
         }
       }
-    }    
+    }
     stage('DEV Remove bids-validator image') {
       when {
           allOf {
@@ -115,7 +115,7 @@ pipeline {
         sh "docker rmi $imagename_bids_validator_dev:edge"
       }
     }
-/**        
+/**
     stage('Git clone staging') {
         when {branch "main"}
         steps{
@@ -170,7 +170,7 @@ pipeline {
           }
         }
       }
-    }  
+    }
     stage('STAGING Remove filecopy image') {
       when {
           allOf {
@@ -197,7 +197,7 @@ pipeline {
           }
         }
       }
-    }  
+    }
     stage('STAGING Remove bids-validator image') {
       when {
           allOf {
@@ -209,7 +209,7 @@ pipeline {
         sh "docker rmi $imagename_bids_validator_staging:stable"
       }
     }
-**/    
+**/
   }
 
   post {
