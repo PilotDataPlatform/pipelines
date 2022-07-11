@@ -10,25 +10,48 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
+import asyncio
 import io
+import logging
 from datetime import datetime
 from typing import Optional
 
 from aiokafka import AIOKafkaProducer
 from fastavro import schema
 from fastavro import schemaless_writer
+from operations.config import get_settings
 from operations.models import Node
+
+logger = logging.getLogger(__name__)
+ConfigClass = get_settings()
 
 
 class KafkaProducer:
-    def __init__(self, endpoint) -> None:
-        self.endpoint = endpoint
-        self.topic = 'metadata.items.activity'
-        self.schema = 'operations/item_activity_schema.avsc'
+    endpoint = ConfigClass.KAFKA_URL
+    topic = 'metadata.items.activity'
+    schema = 'operations/item_activity_schema.avsc'
+    producer = None
 
+    @classmethod
     async def init_connection(self):
-        self.producer = AIOKafkaProducer(bootstrap_servers=self.endpoint)
+        if self.producer is None:
+            logger.info('Initializing the kafka producer')
+            self.producer = AIOKafkaProducer(bootstrap_servers=self.endpoint, enable_idempotence=True)
+            try:
+                # Get cluster layout and initial topic/partition leadership information
+                await self.producer.start()
+            except Exception as e:
+                logger.error(f'Fail to start kafka producer:{str(e)}')
+                raise e
 
+    @classmethod
+    def close_connection(self) -> None:
+        if self.producer is not None:
+            logger.info('Closing the kafka producer')
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.producer.stop())
+
+    @classmethod
     async def create_file_operation_logs(
         self, input_file: Node, operation_type: str, operator: str, output_file: Optional[Node]
     ):
@@ -64,10 +87,7 @@ class KafkaProducer:
             validated_message = bio.getvalue()
 
             # Send message to kafka
-            await self.producer.start()
             await self.producer.send_and_wait(self.topic, validated_message)
         except Exception as e:
+            logger.error(f'Fail to send message:{str(e)}')
             raise Exception(f'Error when validate and send message to kafka producer: {e}')
-
-        finally:
-            await self.producer.stop()
