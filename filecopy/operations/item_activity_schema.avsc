@@ -5,10 +5,10 @@
   "fields": [
     {
       "name": "item_id",
-      "type": {
-    "type": "string",
-    "logicalType": "uuid"
-      }
+      "type": ["null", {
+	"type": "string",
+	"logicalType": "uuid"
+      }]
     }, {
       "name": "item_name",
       "type": "string"
@@ -39,17 +39,17 @@
     }, {
       "name": "activity_time",
       "type": {
-    "type": "long",
-    "logicalType": "timestamp-millis"
+	"type": "long",
+	"logicalType": "timestamp-millis"
       }
     }, {
       "name": "changes",
       "type": {
-    "type": "array",
-    "items": {
-        "type": "map",
-        "values": "string"
-    }
+	"type": "array",
+	"items": {
+		"type": "map",
+		"values": "string"
+	}
       }
     }
   ]
