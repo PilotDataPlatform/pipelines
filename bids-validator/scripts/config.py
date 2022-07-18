@@ -37,6 +37,7 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 class Settings(BaseSettings):
     MINIO_HOST: str = ''
+    MINIO_PORT: int
     MINIO_HTTPS: bool
 
     DATAOPS_SERVICE: str = ''
@@ -46,6 +47,7 @@ class Settings(BaseSettings):
 
     DATASET_RDS_DBNAME: str = 'dataset'
     RDS_HOST: str = ''
+    RDS_PORT: int
     RDS_USER: str = ''
     RDS_PWD: str = ''
 

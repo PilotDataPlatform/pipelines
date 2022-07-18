@@ -114,7 +114,8 @@ def get_files(dataset_code) -> list:
 
 
 async def download_from_minio(files_locations, auth_token) -> None:
-    boto3_client = await get_boto3_client(ConfigClass.MINIO_HOST, token=auth_token, https=ConfigClass.MINIO_HTTPS)
+    MINIO_URL = f'{ConfigClass.MINIO_HOST}:{ConfigClass.MINIO_PORT}'
+    boto3_client = await get_boto3_client(MINIO_URL, token=auth_token, https=ConfigClass.MINIO_HTTPS)
     try:
         for file_location in files_locations:
             minio_path = file_location.split('//')[-1]

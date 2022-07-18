@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     APP_NAME: str = 'pipelines'
 
     MINIO_HTTPS: bool
+    MINIO_PORT: int
     MINIO_HOST: str = ''
 
     RDS_SCHEMA: str = 'pilot_approval'

@@ -42,7 +42,7 @@ class KafkaProducer:
                 await self.producer.start()
             except Exception as e:
                 logger.error(f'Fail to start kafka producer:{str(e)}')
-                # raise e
+                raise e
 
     @classmethod
     def close_connection(self) -> None:
