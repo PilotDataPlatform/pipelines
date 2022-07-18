@@ -36,30 +36,25 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Settings(BaseSettings):
-    MINIO_ENDPOINT: str = ''
-    MINIO_HTTPS: str = ''
+    MINIO_HOST: str = ''
+    MINIO_HTTPS: bool
 
-    DATA_OPS_UT_V2: str = ''
+    DATAOPS_SERVICE: str = ''
     DATASET_SERVICE: str = ''
     QUEUE_SERVICE: str = ''
+    METADATA_SERVICE: str = ''
 
     RDS_DBNAME: str = ''
     RDS_HOST: str = ''
     RDS_USER: str = ''
     RDS_PWD: str = ''
-    SQL_DB_NAME: str = ''
-
-    METADATA_SERVICE_V1: str = ''
-    SQLALCHEMY_DATABASE_URI: str = ''
 
     def __init__(self):
         super().__init__()
-        self.MINIO_HTTPS = self.MINIO_HTTPS == 'True'
-        self.DATA_OPS_UT_V2 = self.DATA_OPS_UTIL + '/v2/'
+        self.DATAOPS_SERVICE += '/v2/'
         self.DATASET_SERVICE += '/v1'
         self.QUEUE_SERVICE += '/v1/'
-        self.METADATA_SERVICE_V1 = self.METADATA_SERVICE + '/v1/'
-        self.SQLALCHEMY_DATABASE_URI = f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}/{self.RDS_DBNAME}'
+        self.METADATA_SERVICE = self.METADATA_SERVICE + '/v1/'
 
     class Config:
         env_file = '.env'

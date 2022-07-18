@@ -21,9 +21,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = ConfigClass.SQLALCHEMY_DATABASE_URI
+SQL_URL = f'postgresql://{ConfigClass.RDS_USER}:{ConfigClass.RDS_PWD}@{ConfigClass.RDS_HOST}/{ConfigClass.RDS_DBNAME}'
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQL_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -43,7 +43,7 @@ class DBConnection:
 
 class DatasetModel(Base):
     __tablename__ = 'bids_results'
-    __table_args__ = {'schema': ConfigClass.SQL_DB_NAME}
+    __table_args__ = {'schema': ConfigClass.RDS_DBNAME}
 
     id = Column(Integer)
     dataset_geid = Column(String(), unique=True, primary_key=True)

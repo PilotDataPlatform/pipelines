@@ -69,16 +69,17 @@ def copy(
 
     settings = get_settings()
 
-    project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
+    REDIS_URL = f'redis://{settings.REDIS_USER}:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}'
+    project_client = ProjectClient(settings.PROJECT_SERVICE, REDIS_URL)
 
     metadata_service_client = MetadataServiceClient(
-        settings.METADATA_SERVICE, settings.MINIO_ENDPOINT, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
+        settings.METADATA_SERVICE, settings.MINIO_HOST, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
-    dataops_utility_client = DataopsUtilityClient(settings.DATA_OPS_UTIL)
+    dataops_utility_client = DataopsUtilityClient(settings.DATAOPS_SERVICE)
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
-    minio_client = MinioBoto3Client(access_token, settings.MINIO_ENDPOINT, settings.MINIO_HTTPS)
+    minio_client = MinioBoto3Client(access_token, settings.MINIO_HOST, settings.MINIO_HTTPS)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(KafkaProducer.init_connection())
@@ -88,9 +89,10 @@ def copy(
 
     try:
         if request_id:
+            DB_URI = f'postgresql://{settings.RDS_USER}:{settings.RDS_PWD}@{settings.RDS_HOST}:{settings.RDS_PORT}/{settings.RDS_DBNAME}'
             approval_service_client = ApprovalServiceClient(
-                engine=create_engine(url=settings.RDS_DB_URI, future=True),
-                metadata=MetaData(schema=settings.RDS_SCHEMA_DEFAULT),
+                engine=create_engine(url=DB_URI, future=True),
+                metadata=MetaData(schema=settings.RDS_SCHEMA),
             )
             request_approval_entities = approval_service_client.get_approval_entities(str(request_id))
             approved_entities = request_approval_entities.get_approved()
