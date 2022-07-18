@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     QUEUE_SERVICE: str = ''
     METADATA_SERVICE: str = ''
 
-    RDS_DBNAME: str = ''
+    DATASET_RDS_DBNAME: str = 'dataset'
     RDS_HOST: str = ''
     RDS_USER: str = ''
     RDS_PWD: str = ''
