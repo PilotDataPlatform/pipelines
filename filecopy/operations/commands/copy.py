@@ -67,19 +67,17 @@ def copy(
 
     settings = get_settings()
 
-    REDIS_URL = f'redis://{settings.REDIS_USER}:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}'
-    MINIO_URL = f'{settings.MINIO_HOST}:{settings.MINIO_PORT}'
-    project_client = ProjectClient(settings.PROJECT_SERVICE, REDIS_URL)
+    project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
 
     metadata_service_client = MetadataServiceClient(
-        settings.METADATA_SERVICE, MINIO_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
+        settings.METADATA_SERVICE, settings.MINIO_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
     dataops_utility_client = DataopsUtilityClient(settings.DATAOPS_SERVICE)
-    provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
-    cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
+    provenance_service_client = ProvenanceServiceClient(settings.AUDIT_TRAIL_SERVICE)
+    cataloguing_service_client = CataloguingServiceClient(settings.LINEAGE_SERVICE)
 
     minio_client = MinioBoto3Client(
-        settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY, MINIO_URL, settings.MINIO_HTTPS
+        settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY, settings.MINIO_URL, settings.MINIO_HTTPS
     )
 
     loop = asyncio.get_event_loop()
@@ -90,9 +88,8 @@ def copy(
 
     try:
         if request_id:
-            DB_URI = f'postgresql://{settings.RDS_USER}:{settings.RDS_PWD}@{settings.RDS_HOST}:{settings.RDS_PORT}/{settings.RDS_DBNAME}'
             approval_service_client = ApprovalServiceClient(
-                engine=create_engine(url=DB_URI, future=True),
+                engine=create_engine(url=settings.DB_URI, future=True),
                 metadata=MetaData(schema=settings.RDS_SCHEMA),
             )
             request_approval_entities = approval_service_client.get_approval_entities(str(request_id))

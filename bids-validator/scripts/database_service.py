@@ -21,9 +21,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQL_URL = f'postgresql://{ConfigClass.RDS_USER}:{ConfigClass.RDS_PWD}@{ConfigClass.RDS_HOST}:{ConfigClass.RDS_PORT}/{ConfigClass.DATASET_RDS_DBNAME}'
-
-engine = create_engine(SQL_URL)
+engine = create_engine(ConfigClass.DATASET_RDS_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

@@ -59,6 +59,10 @@ class Settings(BaseSettings):
         self.DATASET_SERVICE += '/v1'
         self.QUEUE_SERVICE += '/v1/'
         self.METADATA_SERVICE = self.METADATA_SERVICE + '/v1/'
+        self.DATASET_RDS_URL = (
+            f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}' f':{self.RDS_PORT}/{self.DATASET_RDS_DBNAME}'
+        )
+        self.MINIO_URL = f'{self.MINIO_HOST}:{self.MINIO_PORT}'
 
     class Config:
         env_file = '.env'

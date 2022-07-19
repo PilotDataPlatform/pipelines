@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     APP_NAME: str = 'pipelines'
 
     MINIO_HTTPS: bool
-    MINIO_PORT: int
+    MINIO_PORT: str = ''
     MINIO_HOST: str = ''
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
@@ -63,9 +63,9 @@ class Settings(BaseSettings):
     RDS_USER: str
     RDS_PWD: str
 
-    PROVENANCE_SERVICE: str
+    AUDIT_TRAIL_SERVICE: str
     DATAOPS_SERVICE: str
-    CATALOGUING_SERVICE: str
+    LINEAGE_SERVICE: str
     GREEN_ZONE_LABEL: str
     CORE_ZONE_LABEL: str
     METADATA_SERVICE: str
@@ -78,6 +78,15 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
     KAFKA_URL: str
+    DB_URI: str = ''
+    REDIS_URL: str = ''
+    MINIO_URL: str = ''
+
+    def __init__(self):
+        super().__init__()
+        self.DB_URI = f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}:{self.RDS_PORT}/{self.RDS_DBNAME}'
+        self.REDIS_URL = f'redis://{self.REDIS_USER}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}'
+        self.MINIO_URL = f'{self.MINIO_HOST}:{self.MINIO_PORT}'
 
     class Config:
         env_file = '.env'
