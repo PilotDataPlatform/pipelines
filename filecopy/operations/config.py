@@ -50,11 +50,11 @@ class Settings(BaseSettings):
 
     APP_NAME: str = 'pipelines'
 
-    MINIO_HTTPS: bool
-    MINIO_PORT: str = ''
+    S3_INTERNAL_HTTPS: bool
+    MINIO_PORT: int
     MINIO_HOST: str = ''
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: str
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
 
     RDS_SCHEMA: str = 'pilot_approval'
     RDS_DBNAME: str = ''

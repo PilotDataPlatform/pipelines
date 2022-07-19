@@ -67,7 +67,7 @@ def delete(
     cataloguing_service_client = CataloguingServiceClient(settings.LINEAGE_SERVICE)
 
     minio_client = MinioBoto3Client(
-        settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY, settings.MINIO_URL, settings.MINIO_HTTPS
+        settings.S3_ACCESS_KEY, settings.S3_SECRET_KEY, settings.MINIO_URL, settings.S3_INTERNAL_HTTPS
     )
 
     loop = asyncio.get_event_loop()

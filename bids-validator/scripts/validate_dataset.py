@@ -115,9 +115,9 @@ async def download_from_minio(files_locations) -> None:
     MINIO_URL = f'{ConfigClass.MINIO_HOST}:{ConfigClass.MINIO_PORT}'
     boto3_client = await get_boto3_client(
         MINIO_URL,
-        access_key=ConfigClass.MINIO_ACCESS_KEY,
-        secret_key=ConfigClass.MINIO_SECRET_KEY,
-        https=ConfigClass.MINIO_HTTPS,
+        access_key=ConfigClass.S3_ACCESS_KEY,
+        secret_key=ConfigClass.S3_SECRET_KEY,
+        https=ConfigClass.S3_INTERNAL_HTTPS,
     )
     try:
         for file_location in files_locations:

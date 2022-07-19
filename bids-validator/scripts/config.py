@@ -37,10 +37,10 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 class Settings(BaseSettings):
     MINIO_HOST: str = ''
-    MINIO_PORT: int
-    MINIO_HTTPS: bool
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: str
+    MINIO_PORT: str = ''
+    S3_INTERNAL_HTTPS: bool
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
 
     DATAOPS_SERVICE: str = ''
     DATASET_SERVICE: str = ''
