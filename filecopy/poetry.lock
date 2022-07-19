@@ -414,7 +414,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "pilot-platform-common"
-version = "0.0.39"
+version = "0.0.41"
 description = "Generates entity ID and connects with Vault (secret engine) to retrieve credentials"
 category = "main"
 optional = false
@@ -764,7 +764,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "65a2bed451a34dbf1c804293cffe7527255b5be4a0537575dfc5995c94b69836"
+content-hash = "8c95d2f5478014e2714f54475401219eb52c84f99bb02b6ca018d84a722e63d7"
 
 [metadata.files]
 aioboto3 = [

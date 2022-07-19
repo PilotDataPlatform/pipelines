@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     MINIO_HTTPS: bool
     MINIO_PORT: int
     MINIO_HOST: str = ''
+    MINIO_ACCESS_KEY: str
+    MINIO_SECRET_KEY: str
 
     RDS_SCHEMA: str = 'pilot_approval'
     RDS_DBNAME: str = ''

@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     MINIO_HOST: str = ''
     MINIO_PORT: int
     MINIO_HTTPS: bool
+    MINIO_ACCESS_KEY: str
+    MINIO_SECRET_KEY: str
 
     DATAOPS_SERVICE: str = ''
     DATASET_SERVICE: str = ''

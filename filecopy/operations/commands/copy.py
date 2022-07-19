@@ -47,7 +47,6 @@ atexit.register(KafkaProducer.close_connection)
 @click.option('--session-id', type=str, required=True)
 @click.option('--project-code', type=str, required=True)
 @click.option('--operator', type=str, required=True)
-@click.option('--access-token', type=str, required=True)
 @click.option('--request-id', type=click.UUID)
 def copy(
     source_id: str,
@@ -57,7 +56,6 @@ def copy(
     session_id: str,
     project_code: str,
     operator: str,
-    access_token: str,
     request_id: Optional[uuid.UUID],
 ):
     """Copy files from source geid into destination geid."""
@@ -80,7 +78,9 @@ def copy(
     provenance_service_client = ProvenanceServiceClient(settings.PROVENANCE_SERVICE)
     cataloguing_service_client = CataloguingServiceClient(settings.CATALOGUING_SERVICE)
 
-    minio_client = MinioBoto3Client(access_token, MINIO_URL, settings.MINIO_HTTPS)
+    minio_client = MinioBoto3Client(
+        settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY, MINIO_URL, settings.MINIO_HTTPS
+    )
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(KafkaProducer.init_connection())
