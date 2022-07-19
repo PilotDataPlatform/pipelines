@@ -86,3 +86,4 @@ You can contribute the project in following ways:
 * Suggest a feature
 * Open a pull request for fixing issues or developing plugins
 
+
