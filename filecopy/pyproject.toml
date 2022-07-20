@@ -19,7 +19,7 @@ python-json-logger = "^2.0.2"
 aioredis = "2.0.1"
 fastavro = "^1.5.2"
 aiokafka = "^0.7.2"
-pilot-platform-common = "0.0.39"
+pilot-platform-common = "0.0.41"
 
 [tool.poetry.dev-dependencies]
 pytest = "6.2.5"

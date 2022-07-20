@@ -36,30 +36,33 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Settings(BaseSettings):
-    MINIO_ENDPOINT: str = ''
-    MINIO_HTTPS: str = ''
+    S3_HOST: str = ''
+    S3_PORT: int
+    S3_INTERNAL_HTTPS: bool
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
 
-    DATA_OPS_UT_V2: str = ''
+    DATAOPS_SERVICE: str = ''
     DATASET_SERVICE: str = ''
     QUEUE_SERVICE: str = ''
+    METADATA_SERVICE: str = ''
 
-    RDS_DBNAME: str = ''
+    DATASET_RDS_DBNAME: str = 'dataset'
     RDS_HOST: str = ''
+    RDS_PORT: int
     RDS_USER: str = ''
     RDS_PWD: str = ''
-    SQL_DB_NAME: str = ''
-
-    METADATA_SERVICE_V1: str = ''
-    SQLALCHEMY_DATABASE_URI: str = ''
 
     def __init__(self):
         super().__init__()
-        self.MINIO_HTTPS = self.MINIO_HTTPS == 'True'
-        self.DATA_OPS_UT_V2 = self.DATA_OPS_UTIL + '/v2/'
+        self.DATAOPS_SERVICE += '/v2/'
         self.DATASET_SERVICE += '/v1'
         self.QUEUE_SERVICE += '/v1/'
-        self.METADATA_SERVICE_V1 = self.METADATA_SERVICE + '/v1/'
-        self.SQLALCHEMY_DATABASE_URI = f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}/{self.RDS_DBNAME}'
+        self.METADATA_SERVICE = self.METADATA_SERVICE + '/v1/'
+        self.DATASET_RDS_URL = (
+            f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}:{self.RDS_PORT}/{self.DATASET_RDS_DBNAME}'
+        )
+        self.S3_URL = f'{self.S3_HOST}:{self.S3_PORT}'
 
     class Config:
         env_file = '.env'

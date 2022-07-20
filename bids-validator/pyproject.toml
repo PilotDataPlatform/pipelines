@@ -16,7 +16,7 @@ black = "22.3.0"
 SQLAlchemy = "^1.4.36"
 requests = "2.24.0"
 asyncio = "^3.4.3"
-pilot-platform-common = "0.0.33"
+pilot-platform-common = "0.0.41"
 
 [tool.poetry.dev-dependencies]
 

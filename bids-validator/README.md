@@ -52,7 +52,7 @@ This is an example of how you may setting up your service locally. To get a loca
 
  5. run it locally:
  ```
- python validate_dataset.py -d {dataset-id} -env dev -refresh {refresh token} -access {access_token}
+ python validate_dataset.py -d {dataset-id} -env dev
  ```
 
 ### Dockerizing

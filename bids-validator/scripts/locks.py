@@ -27,7 +27,7 @@ def get_all_children_nodes(parent_path, zone, container_code):
     if parent_path:
         parameters['parent_path'] = parent_path
 
-    node_query_url = ConfigClass.METADATA_SERVICE_V1 + 'items/search/'
+    node_query_url = ConfigClass.METADATA_SERVICE + 'items/search/'
     response = requests.get(node_query_url, params=parameters)
     ffs = response.json()['result']
 
@@ -36,7 +36,7 @@ def get_all_children_nodes(parent_path, zone, container_code):
 
 def lock_resource(resource_key: str, operation: str) -> dict:
     # operation can be either read or write
-    url = ConfigClass.DATA_OPS_UT_V2 + 'resource/lock'
+    url = ConfigClass.DATAOPS_SERVICE + 'resource/lock'
     post_json = {'resource_key': resource_key, 'operation': operation}
 
     response = requests.post(url, json=post_json)
@@ -48,7 +48,7 @@ def lock_resource(resource_key: str, operation: str) -> dict:
 
 def unlock_resource(resource_key: str, operation: str) -> dict:
     # operation can be either read or write
-    url = ConfigClass.DATA_OPS_UT_V2 + 'resource/lock'
+    url = ConfigClass.DATAOPS_SERVICE + 'resource/lock'
     post_json = {'resource_key': resource_key, 'operation': operation}
 
     response = requests.delete(url, json=post_json)

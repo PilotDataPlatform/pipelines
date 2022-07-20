@@ -23,7 +23,7 @@ from pydantic import Extra
 class VaultConfig(BaseSettings):
     """Store vault related configuration."""
 
-    APP_NAME: str = 'filecopy'
+    APP_NAME: str = 'pipelines'
     CONFIG_CENTER_ENABLED: bool = False
 
     VAULT_URL: Optional[str]
@@ -48,22 +48,26 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 class Settings(BaseSettings):
     """Store service configuration settings."""
 
-    APP_NAME: str = 'filecopy'
+    APP_NAME: str = 'pipelines'
 
-    MINIO_OPENID_CLIENT: str
-    MINIO_ENDPOINT: str
-    MINIO_HTTPS: bool
-    MINIO_HOST: str = ''
+    S3_INTERNAL_HTTPS: bool
+    S3_PORT: int
+    S3_HOST: str = ''
+    S3_ACCESS_KEY: str
+    S3_SECRET_KEY: str
+    S3_URL: str = ''
 
-    KEYCLOAK_MINIO_SECRET: str
-    KEYCLOAK_ENDPOINT: str
+    RDS_SCHEMA: str = 'pilot_approval'
+    RDS_DBNAME: str = ''
+    RDS_HOST: str = ''
+    RDS_PORT: int
+    RDS_USER: str
+    RDS_PWD: str
+    DB_URI: str = ''
 
-    RDS_SCHEMA_DEFAULT: str
-    RDS_DB_URI: str
-
-    PROVENANCE_SERVICE: str
-    DATA_OPS_UTIL: str
-    CATALOGUING_SERVICE: str
+    AUDIT_TRAIL_SERVICE: str
+    DATAOPS_SERVICE: str
+    LINEAGE_SERVICE: str
     GREEN_ZONE_LABEL: str
     CORE_ZONE_LABEL: str
     METADATA_SERVICE: str
@@ -71,18 +75,18 @@ class Settings(BaseSettings):
     TEMP_DIR: str = ''
     COPIED_WITH_APPROVAL_TAG: str = 'copied-to-core'
     PROJECT_SERVICE: str
-    REDIS_URL: str = ''
     REDIS_USER: str = 'default'
     REDIS_PASSWORD: str
     REDIS_HOST: str
     REDIS_PORT: str
+    REDIS_URL: str = ''
     KAFKA_URL: str
 
-    def __init__(self, *args: Any, **kwds: Any) -> None:
-        super().__init__(*args, **kwds)
-
-        self.MINIO_HOST = self.MINIO_ENDPOINT
+    def __init__(self):
+        super().__init__()
+        self.DB_URI = f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}:{self.RDS_PORT}/{self.RDS_DBNAME}'
         self.REDIS_URL = f'redis://{self.REDIS_USER}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}'
+        self.S3_URL = f'{self.S3_HOST}:{self.S3_PORT}'
 
     class Config:
         env_file = '.env'

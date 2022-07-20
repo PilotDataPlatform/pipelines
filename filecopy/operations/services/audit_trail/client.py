@@ -19,7 +19,7 @@ from requests import Session
 logger = logging.getLogger(__name__)
 
 
-class ProvenanceServiceClient:
+class AuditTrailServiceClient:
     def __init__(self, endpoint: str) -> None:
         self.endpoint_v1 = f'{endpoint}/v1'
         self.client = Session()

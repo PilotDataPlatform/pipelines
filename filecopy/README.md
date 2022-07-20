@@ -51,12 +51,12 @@ This is an example of how you may setting up your service locally. To get a loca
  4. run it locally:
  File folder copy
  ```
- python3 -m operations copy --source-id 'source folder id where the file copy from' --destination-id 'destination folder id where the file copy to' --project-code 'project_code' --operator 'operator' --job-id 'job id' --session-id 'session id' --access-token 'Bearer token' --include-ids 'Id of the copied file and folder'
+ python3 -m operations copy --source-id 'source folder id where the file copy from' --destination-id 'destination folder id where the file copy to' --project-code 'project_code' --operator 'operator' --job-id 'job id' --session-id 'session id'  --include-ids 'Id of the copied file and folder'
 
  ```
  File folder delete
  ```
- python3 -m operations delete --source-id 'source folder id where the file delete from' --include-ids 'Id of the deleted file and folder' --project-code 'project_code' --operator 'operator' --job-id 'job id' --session-id 'session id' --access-token 'Bearer token'
+ python3 -m operations delete --source-id 'source folder id where the file delete from' --include-ids 'Id of the deleted file and folder' --project-code 'project_code' --operator 'operator' --job-id 'job id' --session-id 'session id'
  ```
 
 ### Testing
@@ -85,4 +85,3 @@ You can contribute the project in following ways:
 * Report a bug
 * Suggest a feature
 * Open a pull request for fixing issues or developing plugins
-

@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class MinioBoto3Client:
-    def __init__(self, access_token: str, minio_endpoint: str, minio_https: str) -> None:
-        self.token = access_token
+    def __init__(self, access_key: str, secret_key: str, minio_endpoint: str, minio_https: str) -> None:
+        self.minio_access_key = access_key
+        self.minio_secret_key = secret_key
         self.minio_endpoint = minio_endpoint
         self.minio_https = minio_https
         self.client = self.connect_to_minio()
@@ -31,15 +32,19 @@ class MinioBoto3Client:
     def connect_to_minio(self) -> Boto3Client:
         loop = asyncio.get_event_loop()
         boto3_client = loop.run_until_complete(
-            get_boto3_client(self.minio_endpoint, token=self.token, https=self.minio_https)
+            get_boto3_client(
+                self.minio_endpoint,
+                access_key=self.minio_access_key,
+                secret_key=self.minio_secret_key,
+                https=self.minio_https,
+            )
         )
         return boto3_client
 
     async def download_object(self, src_bucket, src_path, temp_path):
-        await self.client.downlaod_object(src_bucket, src_path, temp_path)
+        await self.client.download_object(src_bucket, src_path, temp_path)
 
     async def copy_object(self, dest_bucket, dest_path, source_bucket, source_path):
-        logger.debug(f'Temp credential is {self.client.temp_credentials}')
         result = await self.client.copy_object(source_bucket, source_path, dest_bucket, dest_path)
         return result
 

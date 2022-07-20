@@ -15,7 +15,7 @@ from operations.models import Node
 from requests import Session
 
 
-class CataloguingServiceClient:
+class LineageServiceClient:
     def __init__(self, endpoint: str):
         self.endpoint_v2 = f'{endpoint}/v2'
         self.client = Session()

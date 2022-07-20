@@ -42,8 +42,6 @@ def parse_inputs() -> dict:
 
     parser.add_argument('-d', '--dataset-id', help='Dataset id', required=True)
     parser.add_argument('-env', '--environment', help='Environment', required=True)
-    # parser.add_argument('-refresh', '--refresh-token', help='Refresh Token', required=True)
-    parser.add_argument('-access', '--access-token', help='Access Token', required=True)
 
     arguments = vars(parser.parse_args())
     return arguments
@@ -103,7 +101,7 @@ def get_files(dataset_code) -> list:
     }
 
     try:
-        resp = requests.get(ConfigClass.METADATA_SERVICE_V1 + 'items/search/', params=query)
+        resp = requests.get(ConfigClass.METADATA_SERVICE + 'items/search/', params=query)
         for node in resp.json()['result']:
             if node['type'] == 'file':
                 all_files.append(node['storage']['location_uri'])
@@ -113,13 +111,18 @@ def get_files(dataset_code) -> list:
         raise
 
 
-async def download_from_minio(files_locations, auth_token) -> None:
-    boto3_client = await get_boto3_client(ConfigClass.MINIO_ENDPOINT, token=auth_token, https=ConfigClass.MINIO_HTTPS)
+async def download_from_minio(files_locations) -> None:
+    boto3_client = await get_boto3_client(
+        ConfigClass.S3_URL,
+        access_key=ConfigClass.S3_ACCESS_KEY,
+        secret_key=ConfigClass.S3_SECRET_KEY,
+        https=ConfigClass.S3_INTERNAL_HTTPS,
+    )
     try:
         for file_location in files_locations:
             minio_path = file_location.split('//')[-1]
             _, bucket, obj_path = tuple(minio_path.split('/', 2))
-            await boto3_client.downlaod_object(bucket, obj_path, TEMP_FOLDER + obj_path)
+            await boto3_client.download_object(bucket, obj_path, TEMP_FOLDER + obj_path)
 
         logger_info.info('========Minio_Client download finished========')
 
@@ -155,12 +158,9 @@ def main():
 
         # get arguments
         dataset_id = args['dataset_id']
-        access_token = args['access_token']
         dataset_code = get_dataset_code(dataset_id)
 
-        logger_info.info(f'dataset_geid: {dataset_id}, access_token: {access_token}')
-
-        auth_token = {'at': access_token}
+        logger_info.info(f'dataset_geid: {dataset_id}')
 
         locked_node = []
         files_locations = get_files(dataset_code)
@@ -175,7 +175,7 @@ def main():
 
         # Download files folders from minio
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(download_from_minio(files_locations, auth_token['at']))
+        loop.run_until_complete(download_from_minio(files_locations))
         logger_info.info('files are downloaded from minio')
 
         # Get bids validate result

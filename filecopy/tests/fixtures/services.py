@@ -14,10 +14,10 @@ from uuid import uuid4
 
 import pytest
 from operations.services.approval.client import ApprovalServiceClient
-from operations.services.cataloguing.client import CataloguingServiceClient
-from operations.services.dataops_utility.client import DataopsUtilityClient
+from operations.services.audit_trail.client import AuditTrailServiceClient
+from operations.services.dataops.client import DataopsServiceClient
+from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
-from operations.services.provenance.client import ProvenanceServiceClient
 from sqlalchemy import Column
 from sqlalchemy import MetaData
 from sqlalchemy import String
@@ -65,13 +65,13 @@ def approval_service_client(inmemory_engine, metadata) -> ApprovalServiceClient:
 
 
 @pytest.fixture
-def cataloguing_service_client(httpserver) -> CataloguingServiceClient:
-    yield CataloguingServiceClient(httpserver.url_for('/'))
+def lineage_service_client(httpserver) -> LineageServiceClient:
+    yield LineageServiceClient(httpserver.url_for('/'))
 
 
 @pytest.fixture
-def dataops_utility_client(httpserver) -> DataopsUtilityClient:
-    yield DataopsUtilityClient(httpserver.url_for('/'))
+def dataops_client(httpserver) -> DataopsServiceClient:
+    yield DataopsServiceClient(httpserver.url_for('/'))
 
 
 @pytest.fixture
@@ -82,5 +82,5 @@ def metadata_service_client(httpserver) -> MetadataServiceClient:
 
 
 @pytest.fixture
-def provenance_service_client(httpserver) -> ProvenanceServiceClient:
-    yield ProvenanceServiceClient(httpserver.url_for('/'))
+def audit_trail_service_client(httpserver) -> AuditTrailServiceClient:
+    yield AuditTrailServiceClient(httpserver.url_for('/'))

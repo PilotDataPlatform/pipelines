@@ -27,10 +27,10 @@ from operations.models import get_timestamp
 from operations.services.approval.client import ApprovalServiceClient
 from operations.services.approval.models import ApprovedApprovalEntities
 from operations.services.approval.models import CopyStatus
-from operations.services.cataloguing.client import CataloguingServiceClient
-from operations.services.dataops_utility.client import DataopsUtilityClient
+from operations.services.audit_trail.client import AuditTrailServiceClient
+from operations.services.dataops.client import DataopsServiceClient
+from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
-from operations.services.provenance.client import ProvenanceServiceClient
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +134,9 @@ class CopyManager(BaseCopyManager):
     def __init__(
         self,
         metadata_service_client: MetadataServiceClient,
-        cataloguing_service_client: CataloguingServiceClient,
-        provenance_service_client: ProvenanceServiceClient,
-        dataops_utility_client: DataopsUtilityClient,
+        lineage_service_client: LineageServiceClient,
+        audit_trail_service_client: AuditTrailServiceClient,
+        dataops_client: DataopsServiceClient,
         approval_service_client: Optional[ApprovalServiceClient],
         approved_entities: Optional[ApprovedApprovalEntities],
         duplicated_files: DuplicatedFileNames,
@@ -153,9 +153,9 @@ class CopyManager(BaseCopyManager):
     ) -> None:
         super().__init__(metadata_service_client, approval_service_client, approved_entities, include_geids)
 
-        self.cataloguing_service_client = cataloguing_service_client
-        self.provenance_service_client = provenance_service_client
-        self.dataops_utility_client = dataops_utility_client
+        self.lineage_service_client = lineage_service_client
+        self.audit_trail_service_client = audit_trail_service_client
+        self.dataops_client = dataops_client
 
         self.duplicated_files = duplicated_files
         self.system_tags = system_tags
@@ -172,9 +172,9 @@ class CopyManager(BaseCopyManager):
         self._copy_zip_preview_info(source_node.id, target_node.id)
 
         namespace = self.core_zone_label.lower()
-        self.cataloguing_service_client.create_catalog_entity(target_node, self.operator, namespace)
+        self.lineage_service_client.create_catalog_entity(target_node, self.operator, namespace)
 
-        self.provenance_service_client.create_lineage_v3(
+        self.audit_trail_service_client.create_lineage_v3(
             source_node.id,
             target_node.id,
             source_node.name,
@@ -198,11 +198,11 @@ class CopyManager(BaseCopyManager):
     def _copy_zip_preview_info(self, old_geid, new_geid) -> None:
         """Transfer the saved preview info to copied one."""
 
-        response = self.dataops_utility_client.get_zip_preview(old_geid)
+        response = self.dataops_client.get_zip_preview(old_geid)
         if response is None:
             return
 
-        self.dataops_utility_client.create_zip_preview(new_geid, response['result'])
+        self.dataops_client.create_zip_preview(new_geid, response['result'])
 
     def process_file(self, source_file: Node, destination_folder: Node) -> None:
         if not self._is_node_approved(source_file):
@@ -308,9 +308,9 @@ class DeleteManager(NodeManager):
     def __init__(
         self,
         metadata_service_client: MetadataServiceClient,
-        cataloguing_service_client: CataloguingServiceClient,
-        provenance_service_client: ProvenanceServiceClient,
-        dataops_utility_client: DataopsUtilityClient,
+        lineage_service_client: LineageServiceClient,
+        audit_trail_service_client: AuditTrailServiceClient,
+        dataops_client: DataopsServiceClient,
         project: Node,
         operator: str,
         minio_client: MinioBoto3Client,
@@ -323,9 +323,9 @@ class DeleteManager(NodeManager):
     ) -> None:
         super().__init__(metadata_service_client)
 
-        self.cataloguing_service_client = cataloguing_service_client
-        self.provenance_service_client = provenance_service_client
-        self.dataops_utility_client = dataops_utility_client
+        self.lineage_service_client = lineage_service_client
+        self.audit_trail_service_client = audit_trail_service_client
+        self.dataops_client = dataops_client
 
         self.removal_timestamp = get_timestamp()
         self.project_code = project['code']
