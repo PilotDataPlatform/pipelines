@@ -12,11 +12,11 @@
 
 
 class TestAuditTrailServiceClient:
-    def test_create_lineage_v3_returns_response_body(self, provenance_service_client, httpserver, fake):
+    def test_create_lineage_v3_returns_response_body(self, audit_trail_service_client, httpserver, fake):
         expected_body = fake.pydict(value_types=['str', 'int'])
         httpserver.expect_request('/v1/lineage/').respond_with_json(expected_body)
 
-        received_body = provenance_service_client.create_lineage_v3(
+        received_body = audit_trail_service_client.create_lineage_v3(
             fake.geid(), fake.geid(), fake.word(), fake.word(), fake.word(), fake.word(), fake.word()
         )
 

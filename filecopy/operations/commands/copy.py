@@ -26,9 +26,9 @@ from operations.managers import CopyPreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.services.approval.client import ApprovalServiceClient
 from operations.services.audit_trail.client import AuditTrailServiceClient
-from operations.services.dataops_utility.client import DataopsUtilityClient
-from operations.services.dataops_utility.client import JobStatus
-from operations.services.dataops_utility.client import ResourceLockOperation
+from operations.services.dataops.client import DataopsClient
+from operations.services.dataops.client import JobStatus
+from operations.services.dataops.client import ResourceLockOperation
 from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
 from operations.traverser import Traverser
@@ -72,9 +72,9 @@ def copy(
     metadata_service_client = MetadataServiceClient(
         settings.METADATA_SERVICE, settings.S3_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
-    dataops_utility_client = DataopsUtilityClient(settings.DATAOPS_SERVICE)
-    provenance_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
-    cataloguing_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
+    dataops_client = DataopsClient(settings.DATAOPS_SERVICE)
+    audit_trail_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
+    lineage_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
 
     minio_client = MinioBoto3Client(
         settings.S3_ACCESS_KEY, settings.S3_SECRET_KEY, settings.S3_URL, settings.S3_INTERNAL_HTTPS
@@ -123,10 +123,8 @@ def copy(
         project = loop.run_until_complete(metadata_service_client.get_project_by_code(project_code))
 
         try:
-            dataops_utility_client.lock_resources(copy_preparation_manager.read_lock_paths, ResourceLockOperation.READ)
-            dataops_utility_client.lock_resources(
-                copy_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
-            )
+            dataops_client.lock_resources(copy_preparation_manager.read_lock_paths, ResourceLockOperation.READ)
+            dataops_client.lock_resources(copy_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE)
 
             pipeline_name = 'data_transfer_folder'
             pipeline_desc = 'the script will copy the folder \
@@ -136,9 +134,9 @@ def copy(
             system_tags = [settings.COPIED_WITH_APPROVAL_TAG]
             copy_manager = CopyManager(
                 metadata_service_client,
-                cataloguing_service_client,
-                provenance_service_client,
-                dataops_utility_client,
+                lineage_service_client,
+                audit_trail_service_client,
+                dataops_client,
                 approval_service_client,
                 approved_entities,
                 copy_preparation_manager.duplicated_files,
@@ -156,18 +154,14 @@ def copy(
             traverser = Traverser(copy_manager)
             traverser.traverse_tree(source_folder, destination_folder)
         finally:
-            dataops_utility_client.unlock_resources(
-                copy_preparation_manager.read_lock_paths, ResourceLockOperation.READ
-            )
-            dataops_utility_client.unlock_resources(
-                copy_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
-            )
+            dataops_client.unlock_resources(copy_preparation_manager.read_lock_paths, ResourceLockOperation.READ)
+            dataops_client.unlock_resources(copy_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE)
 
-        dataops_utility_client.update_job(session_id, job_id, JobStatus.SUCCEED)
+        dataops_client.update_job(session_id, job_id, JobStatus.SUCCEED)
         click.echo('Copy operation has been finished successfully.')
     except Exception as e:
         click.echo(f'Exception occurred while performing copy operation:{e}')
         try:
-            dataops_utility_client.update_job(session_id, job_id, JobStatus.TERMINATED)
+            dataops_client.update_job(session_id, job_id, JobStatus.TERMINATED)
         except Exception as e:
             click.echo(f'Update job error: {e}')

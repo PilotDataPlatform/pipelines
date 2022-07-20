@@ -25,9 +25,9 @@ from operations.managers import DeletePreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import ZoneType
 from operations.services.audit_trail.client import AuditTrailServiceClient
-from operations.services.dataops_utility.client import DataopsUtilityClient
-from operations.services.dataops_utility.client import JobStatus
-from operations.services.dataops_utility.client import ResourceLockOperation
+from operations.services.dataops.client import DataopsClient
+from operations.services.dataops.client import JobStatus
+from operations.services.dataops.client import ResourceLockOperation
 from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
 from operations.traverser import Traverser
@@ -62,9 +62,9 @@ def delete(
     metadata_service_client = MetadataServiceClient(
         settings.METADATA_SERVICE, settings.S3_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
-    dataops_utility_client = DataopsUtilityClient(settings.DATAOPS_SERVICE)
-    provenance_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
-    cataloguing_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
+    dataops_client = DataopsClient(settings.DATAOPS_SERVICE)
+    audit_trail_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
+    lineage_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
 
     minio_client = MinioBoto3Client(
         settings.S3_ACCESS_KEY, settings.S3_SECRET_KEY, settings.S3_URL, settings.S3_INTERNAL_HTTPS
@@ -97,9 +97,7 @@ def delete(
         project = loop.run_until_complete(metadata_service_client.get_project_by_code(project_code))
 
         try:
-            dataops_utility_client.lock_resources(
-                delete_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
-            )
+            dataops_client.lock_resources(delete_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE)
 
             pipeline_name = 'data_delete_folder'
             pipeline_desc = 'the script will delete the folder in \
@@ -108,9 +106,9 @@ def delete(
 
             delete_manager = DeleteManager(
                 metadata_service_client,
-                cataloguing_service_client,
-                provenance_service_client,
-                dataops_utility_client,
+                lineage_service_client,
+                audit_trail_service_client,
+                dataops_client,
                 project,
                 operator,
                 minio_client,
@@ -125,11 +123,9 @@ def delete(
             delete_manager.archive_nodes()
 
         finally:
-            dataops_utility_client.unlock_resources(
-                delete_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE
-            )
+            dataops_client.unlock_resources(delete_preparation_manager.write_lock_paths, ResourceLockOperation.WRITE)
 
-        dataops_utility_client.update_job(session_id, job_id, JobStatus.SUCCEED)
+        dataops_client.update_job(session_id, job_id, JobStatus.SUCCEED)
         click.echo('Delete operation has been finished successfully.')
     except Exception as e:
         click.echo(
@@ -137,6 +133,6 @@ def delete(
             delete operation: {e}'
         )
         try:
-            dataops_utility_client.update_job(session_id, job_id, JobStatus.TERMINATED)
+            dataops_client.update_job(session_id, job_id, JobStatus.TERMINATED)
         except Exception as e:
             click.echo(f'Update job error: {e}')

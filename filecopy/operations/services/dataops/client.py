@@ -42,7 +42,7 @@ class JobStatus(str, Enum):
         use_enum_values = True
 
 
-class DataopsUtilityClient:
+class DataopsClient:
     def __init__(self, endpoint: str) -> None:
         self.endpoint_v1 = f'{endpoint}/v1'
         self.endpoint_v2 = f'{endpoint}/v2'
