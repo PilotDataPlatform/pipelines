@@ -24,12 +24,12 @@ from operations.managers import DeleteManager
 from operations.managers import DeletePreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import ZoneType
-from operations.services.cataloguing.client import CataloguingServiceClient
+from operations.services.audit_trail.client import AuditTrailServiceClient
 from operations.services.dataops_utility.client import DataopsUtilityClient
 from operations.services.dataops_utility.client import JobStatus
 from operations.services.dataops_utility.client import ResourceLockOperation
+from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
-from operations.services.provenance.client import ProvenanceServiceClient
 from operations.traverser import Traverser
 
 atexit.register(KafkaProducer.close_connection)
@@ -60,14 +60,14 @@ def delete(
     project_client = ProjectClient(settings.PROJECT_SERVICE, settings.REDIS_URL)
 
     metadata_service_client = MetadataServiceClient(
-        settings.METADATA_SERVICE, settings.MINIO_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
+        settings.METADATA_SERVICE, settings.S3_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
     dataops_utility_client = DataopsUtilityClient(settings.DATAOPS_SERVICE)
-    provenance_service_client = ProvenanceServiceClient(settings.AUDIT_TRAIL_SERVICE)
-    cataloguing_service_client = CataloguingServiceClient(settings.LINEAGE_SERVICE)
+    provenance_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
+    cataloguing_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
 
     minio_client = MinioBoto3Client(
-        settings.S3_ACCESS_KEY, settings.S3_SECRET_KEY, settings.MINIO_URL, settings.S3_INTERNAL_HTTPS
+        settings.S3_ACCESS_KEY, settings.S3_SECRET_KEY, settings.S3_URL, settings.S3_INTERNAL_HTTPS
     )
 
     loop = asyncio.get_event_loop()

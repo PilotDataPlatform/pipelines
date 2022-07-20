@@ -36,8 +36,8 @@ def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Settings(BaseSettings):
-    MINIO_HOST: str = ''
-    MINIO_PORT: str = ''
+    S3_HOST: str = ''
+    S3_PORT: int
     S3_INTERNAL_HTTPS: bool
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
@@ -60,9 +60,9 @@ class Settings(BaseSettings):
         self.QUEUE_SERVICE += '/v1/'
         self.METADATA_SERVICE = self.METADATA_SERVICE + '/v1/'
         self.DATASET_RDS_URL = (
-            f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}' f':{self.RDS_PORT}/{self.DATASET_RDS_DBNAME}'
+            f'postgresql://{self.RDS_USER}:{self.RDS_PWD}@{self.RDS_HOST}:{self.RDS_PORT}/{self.DATASET_RDS_DBNAME}'
         )
-        self.MINIO_URL = f'{self.MINIO_HOST}:{self.MINIO_PORT}'
+        self.S3_URL = f'{self.S3_HOST}:{self.S3_PORT}'
 
     class Config:
         env_file = '.env'

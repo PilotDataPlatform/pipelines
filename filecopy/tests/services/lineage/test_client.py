@@ -10,7 +10,8 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see http://www.gnu.org/licenses/.
 
-class TestCataloguingServiceClient:
+
+class TestLineageServiceClient:
     def test_create_catalog_entity_returns_geid(self, cataloguing_service_client, httpserver, fake, create_node):
         expected_guid = fake.geid()
         body = {

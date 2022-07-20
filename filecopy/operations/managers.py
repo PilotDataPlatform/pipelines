@@ -27,10 +27,10 @@ from operations.models import get_timestamp
 from operations.services.approval.client import ApprovalServiceClient
 from operations.services.approval.models import ApprovedApprovalEntities
 from operations.services.approval.models import CopyStatus
-from operations.services.cataloguing.client import CataloguingServiceClient
+from operations.services.audit_trail.client import AuditTrailServiceClient
 from operations.services.dataops_utility.client import DataopsUtilityClient
+from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
-from operations.services.provenance.client import ProvenanceServiceClient
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +134,8 @@ class CopyManager(BaseCopyManager):
     def __init__(
         self,
         metadata_service_client: MetadataServiceClient,
-        cataloguing_service_client: CataloguingServiceClient,
-        provenance_service_client: ProvenanceServiceClient,
+        cataloguing_service_client: LineageServiceClient,
+        provenance_service_client: AuditTrailServiceClient,
         dataops_utility_client: DataopsUtilityClient,
         approval_service_client: Optional[ApprovalServiceClient],
         approved_entities: Optional[ApprovedApprovalEntities],
@@ -308,8 +308,8 @@ class DeleteManager(NodeManager):
     def __init__(
         self,
         metadata_service_client: MetadataServiceClient,
-        cataloguing_service_client: CataloguingServiceClient,
-        provenance_service_client: ProvenanceServiceClient,
+        cataloguing_service_client: LineageServiceClient,
+        provenance_service_client: AuditTrailServiceClient,
         dataops_utility_client: DataopsUtilityClient,
         project: Node,
         operator: str,
