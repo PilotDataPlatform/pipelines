@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 from operations.services.approval.client import ApprovalServiceClient
 from operations.services.audit_trail.client import AuditTrailServiceClient
-from operations.services.dataops.client import DataopsClient
+from operations.services.dataops.client import DataopsServiceClient
 from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
 from sqlalchemy import Column
@@ -70,8 +70,8 @@ def lineage_service_client(httpserver) -> LineageServiceClient:
 
 
 @pytest.fixture
-def dataops_client(httpserver) -> DataopsClient:
-    yield DataopsClient(httpserver.url_for('/'))
+def dataops_client(httpserver) -> DataopsServiceClient:
+    yield DataopsServiceClient(httpserver.url_for('/'))
 
 
 @pytest.fixture

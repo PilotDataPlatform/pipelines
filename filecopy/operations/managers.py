@@ -28,7 +28,7 @@ from operations.services.approval.client import ApprovalServiceClient
 from operations.services.approval.models import ApprovedApprovalEntities
 from operations.services.approval.models import CopyStatus
 from operations.services.audit_trail.client import AuditTrailServiceClient
-from operations.services.dataops.client import DataopsClient
+from operations.services.dataops.client import DataopsServiceClient
 from operations.services.lineage.client import LineageServiceClient
 from operations.services.metadata.client import MetadataServiceClient
 
@@ -136,7 +136,7 @@ class CopyManager(BaseCopyManager):
         metadata_service_client: MetadataServiceClient,
         lineage_service_client: LineageServiceClient,
         audit_trail_service_client: AuditTrailServiceClient,
-        dataops_client: DataopsClient,
+        dataops_client: DataopsServiceClient,
         approval_service_client: Optional[ApprovalServiceClient],
         approved_entities: Optional[ApprovedApprovalEntities],
         duplicated_files: DuplicatedFileNames,
@@ -310,7 +310,7 @@ class DeleteManager(NodeManager):
         metadata_service_client: MetadataServiceClient,
         lineage_service_client: LineageServiceClient,
         audit_trail_service_client: AuditTrailServiceClient,
-        dataops_client: DataopsClient,
+        dataops_client: DataopsServiceClient,
         project: Node,
         operator: str,
         minio_client: MinioBoto3Client,

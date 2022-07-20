@@ -25,7 +25,7 @@ from operations.managers import DeletePreparationManager
 from operations.minio_boto3_client import MinioBoto3Client
 from operations.models import ZoneType
 from operations.services.audit_trail.client import AuditTrailServiceClient
-from operations.services.dataops.client import DataopsClient
+from operations.services.dataops.client import DataopsServiceClient
 from operations.services.dataops.client import JobStatus
 from operations.services.dataops.client import ResourceLockOperation
 from operations.services.lineage.client import LineageServiceClient
@@ -62,7 +62,7 @@ def delete(
     metadata_service_client = MetadataServiceClient(
         settings.METADATA_SERVICE, settings.S3_URL, settings.CORE_ZONE_LABEL, settings.TEMP_DIR, project_client
     )
-    dataops_client = DataopsClient(settings.DATAOPS_SERVICE)
+    dataops_client = DataopsServiceClient(settings.DATAOPS_SERVICE)
     audit_trail_service_client = AuditTrailServiceClient(settings.AUDIT_TRAIL_SERVICE)
     lineage_service_client = LineageServiceClient(settings.LINEAGE_SERVICE)
 

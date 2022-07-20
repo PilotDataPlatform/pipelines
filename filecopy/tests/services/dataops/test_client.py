@@ -16,7 +16,7 @@ from operations.services.dataops.client import JobStatus
 from operations.services.dataops.client import ResourceLockOperation
 
 
-class TestDataopsClient:
+class TestDataopsServiceClient:
     def test_lock_resources_returns_response_body(self, dataops_client, httpserver, fake):
         expected_body = fake.pydict(value_types=['str', 'int'])
         httpserver.expect_request('/v2/resource/lock/bulk').respond_with_json(expected_body)
