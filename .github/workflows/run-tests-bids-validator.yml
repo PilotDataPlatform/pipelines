@@ -12,14 +12,18 @@
 
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Run Tests bids-validator
 
 # Controls when the workflow will run
 on:
   push:
     branches: [ develop, main ]
+    paths:
+      - 'bids-validator/**'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'bids-validator/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
