@@ -40,10 +40,10 @@ class ApprovalEntity(BaseModel):
 
     id: UUID
     request_id: Optional[UUID]
-    entity_geid: Optional[str]
+    entity_id: Optional[str]
     entity_type: Optional[EntityType]
     review_status: Optional[ReviewStatus]
-    parent_geid: Optional[str]
+    parent_id: Optional[str]
     copy_status: Optional[CopyStatus]
     name: str
 
@@ -63,8 +63,8 @@ class ApprovalRequest(BaseModel):
     """Model to represent one approval request."""
 
     id: UUID
-    destination_geid: str
-    source_geid: str
+    destination_id: str
+    source_id: str
     destination_path: str
     source_path: str
 
@@ -95,7 +95,7 @@ class ApprovalEntities(dict):
         instance = cls()
         for entity in result:
             approval_entity = ApprovalEntity.from_orm(entity)
-            instance[approval_entity.entity_geid] = approval_entity
+            instance[approval_entity.entity_id] = approval_entity
 
         return instance
 
@@ -103,12 +103,12 @@ class ApprovalEntities(dict):
         """Return approval entity and all parent folder entities."""
 
         approved_entities = ApprovedApprovalEntities()
-        approved_entities[approval_entity.entity_geid] = approval_entity
+        approved_entities[approval_entity.entity_id] = approval_entity
 
         current = approval_entity
-        while current.parent_geid:
-            current = self[current.parent_geid]
-            approved_entities[current.entity_geid] = current
+        while current.parent_id:
+            current = self[current.parent_id]
+            approved_entities[current.entity_id] = current
 
         return approved_entities
 
