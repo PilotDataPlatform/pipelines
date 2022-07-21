@@ -27,10 +27,10 @@ def create_approval_entity(fake) -> Callable[..., ApprovalEntity]:
     def _create_approval_entity(
         id_=None,
         request_id=None,
-        entity_geid=None,
+        entity_id=None,
         entity_type=None,
         review_status=...,
-        parent_geid=...,
+        parent_id=...,
         copy_status=...,
         name=None,
     ) -> ApprovalEntity:
@@ -40,8 +40,8 @@ def create_approval_entity(fake) -> Callable[..., ApprovalEntity]:
         if request_id is None:
             request_id = fake.uuid4()
 
-        if entity_geid is None:
-            entity_geid = fake.uuid4()
+        if entity_id is None:
+            entity_id = fake.uuid4()
 
         if entity_type is None:
             entity_type = random.choice(list(EntityType))
@@ -49,8 +49,8 @@ def create_approval_entity(fake) -> Callable[..., ApprovalEntity]:
         if review_status is ...:
             review_status = random.choice(list(ReviewStatus))
 
-        if parent_geid is ...:
-            parent_geid = fake.uuid4()
+        if parent_id is ...:
+            parent_id = fake.uuid4()
 
         if copy_status is ...:
             copy_status = random.choice(list(CopyStatus))
@@ -61,10 +61,10 @@ def create_approval_entity(fake) -> Callable[..., ApprovalEntity]:
         return ApprovalEntity(
             id=id_,
             request_id=request_id,
-            entity_geid=entity_geid,
+            entity_id=entity_id,
             entity_type=entity_type,
             review_status=review_status,
-            parent_geid=parent_geid,
+            parent_id=parent_id,
             copy_status=copy_status,
             name=name,
         )
@@ -77,10 +77,10 @@ class TestApprovalEntity:
         ApprovalEntity(
             id=fake.uuid4(),
             request_id=fake.uuid4(),
-            entity_geid=fake.uuid4(),
+            entity_id=fake.uuid4(),
             entity_type=random.choice(list(EntityType)),
             review_status=random.choice(list(ReviewStatus)),
-            parent_geid=fake.uuid4(),
+            parent_id=fake.uuid4(),
             copy_status=random.choice(list(CopyStatus)),
             name=fake.word(),
         )
@@ -105,22 +105,20 @@ class TestApprovalEntities:
     def test_get_approved_entities_until_top_parent_returns_approval_entity_and_all_parent_folder_entities(
         self, create_approval_entity
     ):
-        approval_entity_1 = create_approval_entity(parent_geid=None, entity_type=EntityType.FOLDER)
-        approval_entity_2 = create_approval_entity(
-            parent_geid=approval_entity_1.entity_geid, entity_type=EntityType.FILE
-        )
+        approval_entity_1 = create_approval_entity(parent_id=None, entity_type=EntityType.FOLDER)
+        approval_entity_2 = create_approval_entity(parent_id=approval_entity_1.entity_id, entity_type=EntityType.FILE)
 
         approval_entities = ApprovalEntities(
             {
-                approval_entity_1.entity_geid: approval_entity_1,
-                approval_entity_2.entity_geid: approval_entity_2,
+                approval_entity_1.entity_id: approval_entity_1,
+                approval_entity_2.entity_id: approval_entity_2,
             }
         )
 
         expected_approved_entities = ApprovedApprovalEntities(
             {
-                approval_entity_1.entity_geid: approval_entity_1,
-                approval_entity_2.entity_geid: approval_entity_2,
+                approval_entity_1.entity_id: approval_entity_1,
+                approval_entity_2.entity_id: approval_entity_2,
             }
         )
 
@@ -130,13 +128,13 @@ class TestApprovalEntities:
 
     def test_get_approved_returns_approved_entities_with_pending_copy_status(self, create_approval_entity):
         approval_entity_1 = create_approval_entity(
-            parent_geid=None,
+            parent_id=None,
             entity_type=EntityType.FILE,
             review_status=ReviewStatus.PENDING,
             copy_status=CopyStatus.PENDING,
         )
         approval_entity_2 = create_approval_entity(
-            parent_geid=None,
+            parent_id=None,
             entity_type=EntityType.FILE,
             review_status=ReviewStatus.APPROVED,
             copy_status=CopyStatus.PENDING,
@@ -144,14 +142,14 @@ class TestApprovalEntities:
 
         approval_entities = ApprovalEntities(
             {
-                approval_entity_1.entity_geid: approval_entity_1,
-                approval_entity_2.entity_geid: approval_entity_2,
+                approval_entity_1.entity_id: approval_entity_1,
+                approval_entity_2.entity_id: approval_entity_2,
             }
         )
 
         expected_approved_entities = ApprovedApprovalEntities(
             {
-                approval_entity_2.entity_geid: approval_entity_2,
+                approval_entity_2.entity_id: approval_entity_2,
             }
         )
 

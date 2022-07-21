@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     APP_NAME: str = 'pipelines'
 
     S3_INTERNAL_HTTPS: bool
-    S3_PORT: int
+    S3_PORT: str = ''
     S3_HOST: str = ''
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
